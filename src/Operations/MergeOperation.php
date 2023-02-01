@@ -177,7 +177,7 @@ class MergeOperation extends AbstractOperation {
 
     // Make sure the file is writable, if not change permissions temporarily.
     $file_mode = NULL;
-    if (!is_writable($destination->fullPath())) {
+    if (file_exists($destination->fullPath()) && !is_writable($destination->fullPath())) {
       $file_mode = (stat($destination->fullPath()))['mode'] & 000777;
       $io->write($interpolator->interpolate("  - Changing <info>[dest-full-path]</info> file permissions temporarily."), TRUE, 4);
       chmod($destination->fullPath(), 0644);
