@@ -145,8 +145,7 @@ class ScaffoldFileCollection implements \IteratorAggregate {
 
       // If a read asset exists, it will come first.
       if (array_key_exists("read", $scaffold_files)) {
-        $verbosity = $package_options[$project_name]->prompt() ? 2 : 4;
-        $io->write("Initializing <comment>{$project_name}</comment>:", TRUE, $verbosity);
+        $io->write("Initializing <comment>{$project_name}</comment>:", TRUE, 4);
       }
 
       // Process the scaffold files.

@@ -55,6 +55,9 @@ class ReadOperation extends AbstractOperation {
    * {@inheritdoc}
    */
   public function process(ScaffoldFilePath $destination, IOInterface $io, ScaffoldOptions $options, ScaffoldOptions $package_options) {
+    $package_name = $package_options->getPackageName();
+
+    // Log initialization.
     $interpolator = $destination->getInterpolator();
     $this->source->addInterpolationData($interpolator);
     $io->write($interpolator->interpolate("  - Reading <info>[src-rel-path]</info>"), TRUE, 4);
@@ -74,7 +77,7 @@ class ReadOperation extends AbstractOperation {
     // Add metadata to the interpolator.
     $metadata = [
       "root-package-name" => $options->getPackageName(),
-      "package-name" => $package_options->getPackageName(),
+      "package-name" => $package_name,
     ];
     $interpolator->addData($metadata);
 
@@ -87,12 +90,15 @@ class ReadOperation extends AbstractOperation {
     if ($prompt === FALSE && $io->isInteractive() && array_key_exists("required", $scaffold_questions)) {
       if (array_diff($scaffold_questions["required"], $scaffold_variable_keys)) {
         $prompt = TRUE;
+        $io->write("Did not find all required variables.", TRUE, 4);
       }
     }
 
     // If the user should be prompted and the package
     // has questions defined, ask them.
     if ($prompt && array_key_exists("questions", $scaffold_questions)) {
+      $io->write("Configure <comment>{$package_name}</comment>:", TRUE, 2);
+
       foreach ($scaffold_questions["questions"] as $variable => $definition) {
         $value = "";
         // If a default was defined set the value to it.
@@ -129,8 +135,7 @@ class ReadOperation extends AbstractOperation {
     // Check if there are missing required variables, if defined.
     if (array_key_exists("required", $scaffold_questions)) {
       if (!array_diff($scaffold_questions["required"], $scaffold_variable_keys)) {
-        $verbosity = $package_options->prompt() ? 2 : 4;
-        $io->write("All required variables found.", TRUE, $verbosity);
+        $io->write("All required variables found.", TRUE, $prompt ? 2 : 4);
       }
       else {
         throw new \Exception("Required values are missing.");
