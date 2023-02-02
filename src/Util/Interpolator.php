@@ -97,7 +97,7 @@ class Interpolator {
   public function interpolate($message, array $extra = [], $default = '') {
     $data = $extra + $this->data;
     $replacements = $this->replacements($message, $data, $default);
-    return strtr($message, $replacements);
+    return strtr($message ?? '', $replacements);
   }
 
   /**
@@ -143,7 +143,7 @@ class Interpolator {
    */
   protected function findTokens($message) {
     $reg_ex = '#' . $this->startToken . '([a-zA-Z0-9._-]+)' . $this->endToken . '#';
-    if (!preg_match_all($reg_ex, $message, $matches, PREG_SET_ORDER)) {
+    if (!preg_match_all($reg_ex, $message ?? '', $matches, PREG_SET_ORDER)) {
       return [];
     }
     $tokens = [];
