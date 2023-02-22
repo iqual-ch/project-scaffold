@@ -270,11 +270,15 @@ class Handler {
   protected function getOptionsFromPackages(array $allowed_packages, array $modified_packages = [], bool $override_prompt = FALSE) {
     $options = [];
     $prompt = FALSE;
-    // If there are modified packages prompt the user for input.
-    if (!empty($modified_packages) || $override_prompt == TRUE) {
+    // Always prompt if the override is enabled.
+    if ($override_prompt == TRUE) {
       $prompt = TRUE;
     }
     foreach ($allowed_packages as $package_name => $package) {
+      // If the allowed package has been modified, prompt the user for input.
+      if (!empty($modified_packages) && array_key_exists($package_name, $modified_packages)) {
+        $prompt = TRUE;
+      }
       $options[$package_name] = $this->manageOptions->packageOptions($package, $prompt);
     }
     return $options;
