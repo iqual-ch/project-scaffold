@@ -152,10 +152,19 @@ class MergeOperation extends AbstractOperation {
       return new ScaffoldResult($destination, FALSE);
     }
 
-    // Make sure the directory exists.
-    $fs->ensureDirectoryExists(dirname($destination_path));
+    // If the generated content from the "merge" source is empty,
+    // then do not create (or rewrite) an empty file.
+    if (empty($new_contents)) {
+      $io->write($interpolator->interpolate("  - Skipping <info>[dest-full-path]</info> because source is empty."), TRUE, 4);
+      return new ScaffoldResult($destination, FALSE);
+    }
     // Copy the new contents to the destination.
-    return $this->copyScaffold($destination, $io, $new_contents);
+    else {
+      // Make sure the directory exists.
+      $fs->ensureDirectoryExists(dirname($destination_path));
+      // Copy the new contents to the destination.
+      return $this->copyScaffold($destination, $io, $new_contents);
+    }
   }
 
   /**
