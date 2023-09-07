@@ -139,11 +139,18 @@ class AddOperation extends AbstractOperation {
       }
       return new ScaffoldResult($destination, FALSE);
     }
-    // Copy the new contents to the destination.
+    // If there is content try to write the content.
     else {
-      // Make sure the directory exists.
-      $fs->ensureDirectoryExists(dirname($destination_path));
-      return $this->copyScaffold($destination, $io, $new_contents);
+      try {
+        // Make sure the directory exists.
+        $fs->ensureDirectoryExists(dirname($destination_path));
+        // Copy the new contents to the destination.
+        return $this->copyScaffold($destination, $io, $new_contents);
+      }
+      catch (\Exception $e) {
+        $io->write($interpolator->interpolate("  - Could not write <info>[dest-full-path]</info>: <warning>" . $e->getMessage() . "</warning>"));
+        return new ScaffoldResult($destination, FALSE);
+      }
     }
   }
 
