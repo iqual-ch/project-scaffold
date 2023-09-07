@@ -100,6 +100,27 @@ class ReadOperation extends AbstractOperation {
       $io->write("Configure <comment>{$package_name}</comment>:", TRUE, 2);
 
       foreach ($scaffold_questions["questions"] as $variable => $definition) {
+        // Sanitize variable name if there are multiples,
+        // e.g. `example[0]` to `example`.
+        $variable = preg_replace('/\[.+/', "", $variable);
+
+        // If this a conditional question, make sure to resolve condition.
+        if (array_key_exists("if", $definition) && count($definition["if"]) == 1) {
+          $conditional_variable = array_key_first($definition["if"]);
+          $conditional_value = array_values($definition["if"])[0];
+
+          // If the condition doesn't match, continue.
+          if (in_array($conditional_variable, $scaffold_variable_keys)) {
+            $current_value = $interpolator->interpolate($this->getScaffoldVariable($conditional_variable, $scaffold_variables));
+            if ($current_value !== $conditional_value) {
+              continue;
+            }
+          }
+          else {
+            continue;
+          }
+        }
+
         $value = "";
         // If a default was defined set the value to it.
         if (array_key_exists("default", $definition)) {
