@@ -52,6 +52,13 @@ class Plugin implements PluginInterface, EventSubscriberInterface, Capable {
   protected $eventCommandWasCalled;
 
   /**
+   * Record whether the current execution is a lock update.
+   *
+   * @var bool
+   */
+  protected $lockUpdateCommand;
+
+  /**
    * Record what command was called.
    *
    * @var string
@@ -72,6 +79,7 @@ class Plugin implements PluginInterface, EventSubscriberInterface, Capable {
     $this->composer = $composer;
     $this->io = $io;
     $this->eventCommandWasCalled = FALSE;
+    $this->lockUpdateCommand = FALSE;
   }
 
   /**
@@ -124,8 +132,10 @@ class Plugin implements PluginInterface, EventSubscriberInterface, Capable {
    *   The Composer event.
    */
   public function postCmd(Event $event) {
-    $this->handler()->scaffold();
-    // $this->handler()->init();
+    // Do not scaffold if it's a `composer update --lock` command to prevent loops.
+    if (!$this->lockUpdateCommand) {
+      $this->handler()->scaffold();
+    }
   }
 
   /**
@@ -151,6 +161,9 @@ class Plugin implements PluginInterface, EventSubscriberInterface, Capable {
       }
       $this->eventCommandWasCalled = TRUE;
       $this->calledCommand = $event->getCommandName();
+      if ($event->getCommandName() == 'update' && $event->getInput()->hasOption("lock") && $event->getInput()->getOption("lock")) {
+        $this->lockUpdateCommand = TRUE;
+      }
     }
   }
 
