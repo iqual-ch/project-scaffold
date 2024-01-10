@@ -354,7 +354,6 @@ class Handler {
       '--lock' => TRUE,
       '--no-autoloader' => TRUE,
       '--no-install' => TRUE,
-      '--no-plugins' => TRUE,
       '--no-scripts' => TRUE,
       '--interactive' => FALSE,
       '--ignore-platform-reqs' => TRUE,
