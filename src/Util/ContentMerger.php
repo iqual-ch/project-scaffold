@@ -183,7 +183,7 @@ class ContentMerger {
 
       // Convert the processed YAML contents to an array.
       try {
-        $contents_array = Yaml::parse($converted_contents);
+        $contents_array = Yaml::parse($converted_contents, Yaml::PARSE_CUSTOM_TAGS);
       }
       catch (ParseException $exception) {
         throw new \RuntimeException("Could not parse YAML file. Error: " . $exception->getMessage());
