@@ -2,8 +2,9 @@
 
 namespace iqual\Composer\ProjectScaffold\Util;
 
-use Symfony\Component\Yaml\Yaml;
 use Symfony\Component\Yaml\Exception\ParseException;
+use Symfony\Component\Yaml\Yaml;
+use Symfony\Component\Yaml\Tag\TaggedValue;
 
 /**
  * Merge contents from a source by replacing the variables in the destination.
@@ -183,7 +184,7 @@ class ContentMerger {
 
       // Convert the processed YAML contents to an array.
       try {
-        $contents_array = Yaml::parse($converted_contents);
+        $contents_array = Yaml::parse($converted_contents, Yaml::PARSE_CUSTOM_TAGS);
       }
       catch (ParseException $exception) {
         throw new \RuntimeException("Could not parse YAML file. Error: " . $exception->getMessage());
@@ -302,6 +303,11 @@ class ContentMerger {
 
         // Remove escaped single-quotes in comments.
         $merged_contents = preg_replace('/^(\s*#.*?)\'\'(.+?)\'\'/m', "$1'$2'", $merged_contents);
+
+        // Remove unncessary newline at the end of the file.
+        if (substr($merged_contents, -2) === "\n\n") {
+          $merged_contents = substr($merged_contents, 0, -1);
+        }
       }
       else {
         $merged_contents = $yaml_contents;
@@ -497,6 +503,12 @@ class ContentMerger {
     foreach ($a as $k => $v) {
       if (is_array($v)) {
         if (!self::arraysAreEqual($v, $b[$k])) {
+          return FALSE;
+        }
+      }
+      // Check for TaggedValue objects.
+      elseif ($v instanceof TaggedValue && $b[$k] instanceof TaggedValue) {
+        if ($v->getTag() !== $b[$k]->getTag() || !self::arraysAreEqual((array) $v->getValue(), (array) $b[$k]->getValue())) {
           return FALSE;
         }
       }
