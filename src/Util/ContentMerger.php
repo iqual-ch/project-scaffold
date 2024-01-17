@@ -302,6 +302,11 @@ class ContentMerger {
 
         // Remove escaped single-quotes in comments.
         $merged_contents = preg_replace('/^(\s*#.*?)\'\'(.+?)\'\'/m', "$1'$2'", $merged_contents);
+
+        // Remove unncessary newline at the end of the file.
+        if (substr($merged_contents, -2) === "\n\n") {
+          $merged_contents = substr($merged_contents, 0, -1);
+        }
       }
       else {
         $merged_contents = $yaml_contents;
