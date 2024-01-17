@@ -2,8 +2,9 @@
 
 namespace iqual\Composer\ProjectScaffold\Util;
 
-use Symfony\Component\Yaml\Yaml;
 use Symfony\Component\Yaml\Exception\ParseException;
+use Symfony\Component\Yaml\Yaml;
+use Symfony\Component\Yaml\Tag\TaggedValue;
 
 /**
  * Merge contents from a source by replacing the variables in the destination.
@@ -502,6 +503,12 @@ class ContentMerger {
     foreach ($a as $k => $v) {
       if (is_array($v)) {
         if (!self::arraysAreEqual($v, $b[$k])) {
+          return FALSE;
+        }
+      }
+      // Check for TaggedValue objects.
+      elseif ($v instanceof TaggedValue && $b[$k] instanceof TaggedValue) {
+        if ($v->getTag() !== $b[$k]->getTag() || !self::arraysAreEqual((array) $v->getValue(), (array) $b[$k]->getValue())) {
           return FALSE;
         }
       }
