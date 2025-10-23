@@ -297,9 +297,9 @@ class ContentMerger {
       // Convert array to YAML.
       $yaml_contents = Yaml::dump($merged_contents_array, $level, $indentation, Yaml::DUMP_MULTI_LINE_LITERAL_BLOCK);
 
-      if (preg_match('/^\s*COMMENT_PLACEHOLDER_\d+: \'(.*?)\'$/m', $yaml_contents)) {
+      if (preg_match('/^\s*COMMENT_PLACEHOLDER_\d+: /m', $yaml_contents)) {
         // Replace comment placeholders with it's actual contents.
-        $merged_contents = preg_replace('/^\s*COMMENT_PLACEHOLDER_\d+: \'(.*?)\'$/m', "$1", $yaml_contents);
+        $merged_contents = preg_replace('/^\s*COMMENT_PLACEHOLDER_\d+: ([\'"])(.*?)\1$/m', "$2", $yaml_contents);
 
         // Remove escaped single-quotes in comments.
         $merged_contents = preg_replace('/^(\s*#.*?)\'\'(.+?)\'\'/m', "$1'$2'", $merged_contents);
