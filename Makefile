@@ -1,4 +1,6 @@
-.PHONY: install test test-unit test-integration test-functional phpstan
+.PHONY: all install test test-unit test-integration test-functional phpstan
+
+all: install test phpstan
 
 install:
 	ddev composer install
