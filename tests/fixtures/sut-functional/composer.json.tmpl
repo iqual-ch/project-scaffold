@@ -1,0 +1,31 @@
+{
+    "name": "fixtures/sut-functional",
+    "description": "Fixture project for functional tests running real composer.",
+    "type": "project",
+    "license": "proprietary",
+    "require": {
+        "iqual/test-assets": "^1.0"
+    },
+    "require-dev": {
+        "iqual/project-scaffold": "^2.0"
+    },
+    "repositories": [path-repositories],
+    "config": {
+        "allow-plugins": {
+            "iqual/project-scaffold": true
+        }
+    },
+    "extra": {
+        "project-scaffold": {
+            "name": "functional-project",
+            "locations": {
+                "project-root": ".",
+                "app-root": "app",
+                "web-root": "app/web"
+            },
+            "allowed-packages": [
+                "iqual/test-assets"
+            ]
+        }
+    }
+}

@@ -1,0 +1,31 @@
+{
+    "name": "iqual/test-template",
+    "description": "Fixture template for functional create-project tests.",
+    "type": "project",
+    "license": "proprietary",
+    "require": {
+        "iqual/test-assets": "^1.0"
+    },
+    "require-dev": {
+        "iqual/project-scaffold": "^2.0"
+    },
+    "repositories": [path-repositories],
+    "config": {
+        "allow-plugins": {
+            "iqual/project-scaffold": true
+        }
+    },
+    "extra": {
+        "project-scaffold": {
+            "name": "template-project",
+            "locations": {
+                "project-root": ".",
+                "app-root": "app",
+                "web-root": "app/web"
+            },
+            "allowed-packages": [
+                "iqual/test-assets"
+            ]
+        }
+    }
+}
