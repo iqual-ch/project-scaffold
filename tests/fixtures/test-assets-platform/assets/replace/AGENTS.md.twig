@@ -1,0 +1,10 @@
+# {{ name | replace({'-': '_'}) }}
+
+Runner: {{ workflows.runner | default('ubuntu-latest') }}
+Fallback: {{ subtitle | default(name ~ '-agents') }}
+{% if locations['web-root'] ~ '/index.php' is existing_file %}
+Web root contains an index file.
+{% endif %}
+{% verbatim %}
+Uses ${{ github.ref }} in workflows.
+{% endverbatim %}

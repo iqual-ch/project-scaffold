@@ -1,0 +1,30 @@
+{
+    "name": "iqual/test-assets-platform",
+    "description": "Fixture asset package mirroring the production platform asset package shapes.",
+    "type": "library",
+    "require": {
+        "iqual/project-scaffold": "*"
+    },
+    "extra": {
+        "project-scaffold": {
+            "runtime": {
+                "php_version": 8.3,
+                "db_version": 10.6,
+                "solr_version": null
+            },
+            "workflows": {
+                "update": true,
+                "phpunit": false
+            },
+            "ai": {
+                "claude": false
+            },
+            "assets": {
+                "add": "assets/add",
+                "replace": "assets/replace",
+                "merge": "assets/merge",
+                "read": "questions.json"
+            }
+        }
+    }
+}

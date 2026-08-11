@@ -1,0 +1,16 @@
+{
+    "required": [
+        "name"
+    ],
+    "questions": {
+        "name": {
+            "question": "What is the <info>code name</info> of the project?",
+            "default": "[root-package-name]",
+            "filter": "/fixtures\\/(.+)/$1/"
+        },
+        "url": {
+            "question": "What is the <info>project URL</info>?",
+            "default": "https://[name].example.com"
+        }
+    }
+}

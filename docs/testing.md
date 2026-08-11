@@ -23,6 +23,8 @@ Or directly with a local PHP >= 8.3: `composer install && composer test`.
 
 The fixture projects live in `tests/fixtures/`. `*.tmpl` files are interpolated with the plugin's own `Interpolator` when a fixture is cloned to a temporary directory; the `[path-repositories]` token expands to `path` repositories pointing at the plugin's working copy, the fixture asset packages and all packages in the plugin's own `vendor` directory. Packagist is disabled, so the whole suite runs offline. Composer's home and cache directories are isolated per test.
 
+The `test-assets-platform` fixture package mirrors the shapes of the production platform asset packages (e.g. `iqual/drupal-platform`): non-string preset variables (floats, booleans, null), templated `add` assets, nested dot-directories, custom YAML tags with scalar values, the `op.new_file` merge context, conditionally-empty templates and question defaults interpolating earlier answers.
+
 The functional tests use the `composer` binary found on the `PATH`; set the `COMPOSER_TEST_BINARY` environment variable to test against a different one.
 
 ## CI

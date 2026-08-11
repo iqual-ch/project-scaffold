@@ -126,6 +126,13 @@ class Fixtures {
           'versions' => ['iqual/test-assets-override' => '1.0.0'],
         ],
       ],
+      [
+        'type' => 'path',
+        'url' => $this->fixturesDir() . '/test-assets-platform',
+        'options' => [
+          'versions' => ['iqual/test-assets-platform' => '1.0.0'],
+        ],
+      ],
     ];
     $installed = json_decode(file_get_contents($this->pluginRoot() . '/vendor/composer/installed.json'), TRUE);
     foreach ($installed['packages'] as $package) {

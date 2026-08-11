@@ -1,0 +1,5 @@
+{% if deployment == 'platform.sh' %}
+"https://{default}/":
+    type: upstream
+    upstream: "app:http"
+{% endif %}

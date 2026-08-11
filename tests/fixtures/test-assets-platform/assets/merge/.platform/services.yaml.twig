@@ -1,0 +1,14 @@
+{% if op.new_file %}
+# Platform services for {{ name }}.
+search:
+    type: solr:9.2
+    configuration:
+        cores:
+            main:
+                conf_dir: !archive "../solr/conf"
+db:
+    type: mariadb:{{ runtime.db_version }}
+{% else %}
+db:
+    type: mariadb:{{ runtime.db_version }}
+{% endif %}

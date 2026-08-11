@@ -1,0 +1,29 @@
+{
+    "name": "fixtures/sut-platform",
+    "description": "Fixture project mirroring a production platform project.",
+    "type": "project",
+    "license": "proprietary",
+    "require": {
+        "iqual/test-assets-platform": "^1.0"
+    },
+    "repositories": [path-repositories],
+    "config": {
+        "allow-plugins": {
+            "iqual/project-scaffold": true
+        }
+    },
+    "extra": {
+        "project-scaffold": {
+            "name": "platform-project",
+            "deployment": "kubernetes",
+            "locations": {
+                "project-root": ".",
+                "app-root": "app",
+                "web-root": "app/web"
+            },
+            "allowed-packages": [
+                "iqual/test-assets-platform"
+            ]
+        }
+    }
+}

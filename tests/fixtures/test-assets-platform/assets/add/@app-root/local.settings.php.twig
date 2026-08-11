@@ -1,0 +1,10 @@
+<?php
+
+// Local settings for {{ name }}.
+$settings['php_version'] = '{{ runtime.php_version }}';
+{% if workflows.update %}
+$settings['managed_updates'] = TRUE;
+{% endif %}
+{% if workflows.phpunit %}
+$settings['phpunit'] = TRUE;
+{% endif %}

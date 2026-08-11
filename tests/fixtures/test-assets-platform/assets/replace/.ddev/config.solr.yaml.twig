@@ -1,0 +1,4 @@
+{% if runtime.solr_version is not null %}
+type: solr
+version: "{{ runtime.solr_version }}"
+{% endif %}
