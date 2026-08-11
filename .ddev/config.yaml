@@ -1,0 +1,5 @@
+name: project-scaffold
+type: php
+php_version: "8.3"
+composer_version: "2"
+disable_settings_management: true

@@ -1,0 +1,8 @@
+# Exclude development files from distribution archives.
+/.ddev export-ignore
+/.gitattributes export-ignore
+/.github export-ignore
+/phpstan.neon.dist export-ignore
+/phpstan-baseline.neon export-ignore
+/phpunit.xml.dist export-ignore
+/tests export-ignore
