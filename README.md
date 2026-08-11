@@ -1,57 +1,47 @@
-# Composer Project Scaffold Plugin 🚧
+# Project Scaffold
 
-This Composer plugin provides the ability to add and update project scaffolding files in your project.
+A Composer plugin that scaffolds and updates project files from versioned asset packages.
 
-Using this plugin it is possible to manage scaffolding files in a composer project. The scaffolding files can be located in a separate composer package which can define assets to be added, replaced or merged into the project. When such a project asset package is added to a project interactively, including on project creation (with `composer create-project`) and during composer updates, the user can be prompted questions to fill in variables which can then be used for dynamically templated scaffolding assets.
+Files that usually get copied from project to project by hand — CI workflows, `.ddev` or `.devcontainer` setups, `.env` templates, `.gitignore`, Makefiles — can instead be defined once in an asset package and managed by Composer. When the package is required, updated or used with `composer create-project`, the plugin places the files, renders templates and, if run interactively, asks the questions the package defines and saves the answers to the project's `composer.json`.
 
-The idea behind the plugin being, that git-commited project files which are essential to the development experience (e.g. `.lando.yml`, `.devcontainer`, `.ddev`, `.env`, etc.) or repository (e.g. `README.md`, `.gitignore`, `.github/workflows`, etc.) can be managed with composer. This allows centrally managing and codifying generic project templates. While composer allows creating new project from an existing package using `composer create-project` this adds the capability of making the bootstrapping interactive with support for templating and also adds the ability to update existing projects.
+The plugin is heavily inspired by Drupal's [drupal/core-composer-scaffold](https://github.com/drupal/core-composer-scaffold), generalized beyond Drupal. Credit to its contributors.
 
-> This plugin is heavily inspired by Drupal's [`drupal/core-composer-scaffold`](https://github.com/drupal/core-composer-scaffold) reusing some of it's code for a more "general" approach to the scaffolding issue. Credit to the contributors on that project. Similar approaches that are standalone tools include [Phabalicious](https://github.com/factorial-io/phabalicious) or [Phint](https://github.com/adhocore/phint).
+## How it works
 
-## Quick Start 🚀
+An asset package declares its files under `extra.project-scaffold.assets`, grouped by operation:
 
-Require the Project Scaffold Plugin with composer in your project and allowing the plugin. It is recommended to only require the plugin as development dependency.
+* `add` — created once, never overwritten.
+* `replace` — kept in sync on every update; an empty source deletes the destination.
+* `merge` — values are merged into existing `.env`, line-based (`.gitignore`), JSON and YAML files, preserving local additions and comments.
+* `read` — a questions definition; missing or newly asked variables are prompted interactively and written back to the root `composer.json`.
+
+Sources ending in `.twig` are rendered with the project's variables before being placed. See [creating a project asset package](./docs/asset-package.md) for the full format.
+
+## Getting started
 
 ```bash
 composer require iqual/project-scaffold --dev
 ```
 
-To manage project scaffolding one (or more) composer package containing the assets has to be required. Once the plugin is required, the user will be prompted (if in an interactive CLI) for questions defined by the package. The answers will then be saved to the `extra.project-scaffold` section of the root project's `composer.json`. Once all required variables are available the assets will then be managed by the Project Scaffold Plugin according to the asset package's `assets` definition.
+Allow the plugin when Composer asks, then require one or more asset packages. The plugin prompts for the package's questions, saves the answers under `extra.project-scaffold` and scaffolds the files. From then on, `composer update` keeps the managed files up to date.
 
-See [Creating a project asset package](./docs/asset-package.md) for a guide on how to create a project asset package.
+## Commands
 
-## Features ⭐
+| Command | Purpose |
+| --- | --- |
+| `composer project:init` | Prompt all package questions again and re-apply the scaffolding. |
+| `composer project:update` | Alias of `project:init`. |
+| `composer project:scaffold` | Re-apply the scaffolding without prompting. |
 
-* Scaffolding new projects (i.e. initializing or bootstrapping)
-* Interactive prompts during project creation or during updates
-* Updating existing project assets or composer projects
-* Managing project assets in separate versioned packages
-* Managing your environment with copmoser
-* Adding, replacing (including deletion) and merging of assets
-* Templating assets based on variables using twig
-* Saving project variables in `extra.project-scaffold` of the project's composer file
-* Automating project scaffolding using composer (e.g. `composer update` in your CI)
+Scaffolding also runs automatically after `composer install`, `update`, `require` and `create-project`.
 
-## Commands ⚡
+## Versions
 
-To initialize a new project (i.e. always prompting for package questions) use:
+| Branch | Requirements | Status |
+| --- | --- | --- |
+| `2.x` | PHP `^8.3`, Composer 2.6+ | Active development |
+| `1.x` | PHP >= 7.3 | Critical fixes only |
 
-```bash
-composer project:init
-```
+## Development
 
-To update an existing project by prompting for the package questions again, and re-applying the scaffolding, use:
-
-```bash
-composer project:update
-```
-
-To (re-)apply the project scaffold from all asset packages use:
-
-```bash
-composer project:scaffold
-```
-
-## Documentation 📕
-
-* [Creating a project asset package](./docs/asset-package.md)
+The test suite runs offline against fixture projects, locally via [ddev](https://ddev.com) (`ddev start`, then `make install` and `make test`) or any PHP >= 8.3 (`composer test`). See [testing](./docs/testing.md).
