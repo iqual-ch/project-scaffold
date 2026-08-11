@@ -44,6 +44,6 @@
     "test:unit": "phpunit --testsuite unit",
     "test:integration": "phpunit --testsuite integration",
     "test:functional": "phpunit --testsuite functional",
-    "phpstan": "phpstan analyse"
+    "phpstan": "phpstan analyse --memory-limit=512M"
   }
 }
