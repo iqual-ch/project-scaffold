@@ -14,16 +14,17 @@ jobs:
     name: Static analysis
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
           coverage: none
-      - uses: ramsey/composer-install@v3
+      - uses: ramsey/composer-install@v4
       - name: Validate composer.json
         run: composer validate --strict
+      # phpstan detects GitHub Actions and annotates PRs natively.
       - name: Run phpstan
-        run: composer phpstan
+        run: vendor/bin/phpstan analyse --no-progress --memory-limit=512M
 
   integration:
     name: Integration (PHP ${{ matrix.php }}, ${{ matrix.dependency-versions }})
@@ -39,14 +40,16 @@ jobs:
           - lowest
           - highest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
           coverage: none
-      - uses: ramsey/composer-install@v3
+      - uses: ramsey/composer-install@v4
         with:
           dependency-versions: ${{ matrix.dependency-versions }}
+      - name: Enable phpunit annotations
+        run: echo "::add-matcher::${{ runner.tool_cache }}/phpunit.json"
       - name: Run unit and integration tests
         run: vendor/bin/phpunit --testsuite unit,integration
 
@@ -71,14 +74,16 @@ jobs:
             composer: snapshot
             experimental: true
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
           tools: composer:${{ matrix.composer }}
           coverage: none
-      - uses: ramsey/composer-install@v3
+      - uses: ramsey/composer-install@v4
       - name: Show composer version
         run: composer --version
+      - name: Enable phpunit annotations
+        run: echo "::add-matcher::${{ runner.tool_cache }}/phpunit.json"
       - name: Run functional tests
         run: vendor/bin/phpunit --testsuite functional
