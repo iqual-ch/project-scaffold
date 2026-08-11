@@ -1,0 +1,27 @@
+{
+    "name": "fixtures/sut-questions",
+    "description": "Fixture project with missing scaffold variables.",
+    "type": "project",
+    "license": "proprietary",
+    "require": {
+        "iqual/test-assets": "^1.0"
+    },
+    "repositories": [path-repositories],
+    "config": {
+        "allow-plugins": {
+            "iqual/project-scaffold": true
+        }
+    },
+    "extra": {
+        "project-scaffold": {
+            "locations": {
+                "project-root": ".",
+                "app-root": "app",
+                "web-root": "app/web"
+            },
+            "allowed-packages": [
+                "iqual/test-assets"
+            ]
+        }
+    }
+}

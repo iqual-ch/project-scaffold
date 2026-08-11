@@ -1,0 +1,153 @@
+<?php
+
+namespace iqual\Composer\ProjectScaffold\Tests\Integration;
+
+use iqual\Composer\ProjectScaffold\Tests\Fixtures;
+use PHPUnit\Framework\TestCase;
+
+/**
+ * Tests the interactive questions logic with scripted user input.
+ */
+class InteractiveQuestionsTest extends TestCase {
+
+  /**
+   * The fixtures helper.
+   *
+   * @var \iqual\Composer\ProjectScaffold\Tests\Fixtures
+   */
+  protected $fixtures;
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function setUp(): void {
+    $this->fixtures = new Fixtures();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function tearDown(): void {
+    $this->fixtures->tearDown();
+  }
+
+  /**
+   * Reads the scaffold options of a project's composer.json file.
+   */
+  protected function readScaffoldExtra(string $sut) {
+    $definition = json_decode(file_get_contents($sut . '/composer.json'), TRUE);
+    return $definition['extra']['project-scaffold'];
+  }
+
+  /**
+   * Tests that missing required variables fail when not interactive.
+   */
+  public function testMissingRequiredVariablesThrowWhenNotInteractive() {
+    $sut = $this->fixtures->cloneFixtureProject('sut-questions');
+    $io = $this->fixtures->io();
+    $composer = $this->fixtures->createComposer($io, $sut);
+    $this->fixtures->installFixturePackage($composer, $sut, 'test-assets', 'iqual/test-assets');
+
+    $this->expectException(\Exception::class);
+    $this->expectExceptionMessage('Required values are missing.');
+    $this->fixtures->runScaffold($composer, $io);
+  }
+
+  /**
+   * Tests that missing required variables are prompted interactively.
+   */
+  public function testQuestionsAreAskedForMissingVariables() {
+    $sut = $this->fixtures->cloneFixtureProject('sut-questions');
+    // Answers: project name, PHP version (option 1 = 8.3), deployment
+    // (option 1 = kubernetes), cluster domain (empty = default).
+    $io = $this->fixtures->io(['my-project', '1', '1', '']);
+    $composer = $this->fixtures->createComposer($io, $sut);
+    $this->fixtures->installFixturePackage($composer, $sut, 'test-assets', 'iqual/test-assets');
+    $this->fixtures->runScaffold($composer, $io);
+    $output = $io->getOutput();
+
+    $this->assertStringContainsString('Did not find all required variables.', $output);
+    $this->assertStringContainsString('Configure iqual/test-assets:', $output);
+    $this->assertStringContainsString('What is the code name of the project?', $output);
+    $this->assertStringContainsString('What PHP version should be installed?', $output);
+    $this->assertStringContainsString('What deployment strategy is used?', $output);
+    $this->assertStringContainsString('What is the cluster domain?', $output);
+
+    // The answers are used for the scaffolded files.
+    $this->assertSame("# my-project\n\nProject running on PHP 8.3.\n", file_get_contents($sut . '/README.md'));
+
+    // The answers are written to the composer.json file.
+    $extra = $this->readScaffoldExtra($sut);
+    $this->assertSame('my-project', $extra['name']);
+    $this->assertSame('8.3', $extra['runtime']['php_version']);
+    $this->assertSame('kubernetes', $extra['deployment']);
+    $this->assertSame('k8s.example.com', $extra['cluster']);
+    $this->assertStringContainsString("Writing variables to 'extra' section of top-level composer.json file.", $output);
+  }
+
+  /**
+   * Tests that conditional questions are skipped if the condition fails.
+   */
+  public function testConditionalQuestionIsSkipped() {
+    $sut = $this->fixtures->cloneFixtureProject('sut-questions');
+    // Answers: project name (empty = filtered default), PHP version
+    // (empty = default 8.2), deployment (option 0 = none). The cluster
+    // question must not be asked.
+    $io = $this->fixtures->io(['', '', '0']);
+    $composer = $this->fixtures->createComposer($io, $sut);
+    $this->fixtures->installFixturePackage($composer, $sut, 'test-assets', 'iqual/test-assets');
+    $this->fixtures->runScaffold($composer, $io);
+    $output = $io->getOutput();
+
+    $this->assertStringNotContainsString('What is the cluster domain?', $output);
+
+    // The default of the name question is the root package name with the
+    // 'fixtures/' prefix removed by the question's filter.
+    $extra = $this->readScaffoldExtra($sut);
+    $this->assertSame('sut-questions', $extra['name']);
+    $this->assertSame('8.2', $extra['runtime']['php_version']);
+    $this->assertSame('none', $extra['deployment']);
+    $this->assertArrayNotHasKey('cluster', $extra);
+  }
+
+  /**
+   * Tests that invalid answers are rejected and asked again.
+   */
+  public function testValidationRejectsInvalidAnswers() {
+    $sut = $this->fixtures->cloneFixtureProject('sut-questions');
+    // The first answer violates the validation pattern of the name
+    // question and is asked again.
+    $io = $this->fixtures->io(['Invalid Name!', 'valid-name', '', '0']);
+    $composer = $this->fixtures->createComposer($io, $sut);
+    $this->fixtures->installFixturePackage($composer, $sut, 'test-assets', 'iqual/test-assets');
+    $this->fixtures->runScaffold($composer, $io);
+    $output = $io->getOutput();
+
+    $this->assertStringContainsString('The input does not match the required format:', $output);
+    $extra = $this->readScaffoldExtra($sut);
+    $this->assertSame('valid-name', $extra['name']);
+  }
+
+  /**
+   * Tests that the init operation prompts even with preset variables.
+   */
+  public function testInitAlwaysPrompts() {
+    $sut = $this->fixtures->cloneFixtureProject('sut-preset');
+    // Keep the preset name and PHP version, choose 'none' for deployment.
+    $io = $this->fixtures->io(['', '', '0']);
+    $composer = $this->fixtures->createComposer($io, $sut);
+    $this->fixtures->installFixturePackage($composer, $sut, 'test-assets', 'iqual/test-assets');
+    $this->fixtures->runScaffold($composer, $io, TRUE);
+    $output = $io->getOutput();
+
+    $this->assertStringContainsString('Configure iqual/test-assets:', $output);
+    $this->assertStringContainsString('What is the code name of the project?', $output);
+
+    // The preset values are offered as defaults and kept.
+    $extra = $this->readScaffoldExtra($sut);
+    $this->assertSame('preset-project', $extra['name']);
+    $this->assertSame('8.2', $extra['runtime']['php_version']);
+    $this->assertSame("# preset-project\n\nProject running on PHP 8.2.\n", file_get_contents($sut . '/README.md'));
+  }
+
+}

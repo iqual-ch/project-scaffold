@@ -1,0 +1,6 @@
+# Service definitions for the project.
+services:
+  app:
+    # The container image to use.
+    image: 'php:7.4'
+    restart: always

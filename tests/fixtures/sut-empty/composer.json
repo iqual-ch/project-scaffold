@@ -1,0 +1,6 @@
+{
+    "name": "fixtures/sut-empty",
+    "description": "Fixture project without any scaffold configuration.",
+    "type": "project",
+    "license": "proprietary"
+}

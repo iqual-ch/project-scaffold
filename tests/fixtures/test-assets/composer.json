@@ -1,0 +1,22 @@
+{
+    "name": "iqual/test-assets",
+    "description": "Fixture asset package covering all scaffold operations.",
+    "type": "library",
+    "require": {
+        "iqual/project-scaffold": "*"
+    },
+    "extra": {
+        "project-scaffold": {
+            "runtime": {
+                "php_version": "8.2",
+                "db_version": "10.6"
+            },
+            "assets": {
+                "add": "assets/add",
+                "replace": "assets/replace",
+                "merge": "assets/merge",
+                "read": "questions.json"
+            }
+        }
+    }
+}

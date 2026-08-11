@@ -1,0 +1,36 @@
+{
+    "required": [
+        "name",
+        "runtime.php_version"
+    ],
+    "questions": {
+        "name": {
+            "question": "What is the <info>code name</info> of the project?",
+            "default": "[root-package-name]",
+            "filter": "/fixtures\\/(.+)/$1/",
+            "validation": "[a-z][a-z0-9\\-]{0,28}[a-z0-9]"
+        },
+        "runtime.php_version": {
+            "question": "What <info>PHP version</info> should be installed?",
+            "options": [
+                "8.2",
+                "8.3",
+                "8.4"
+            ]
+        },
+        "deployment": {
+            "question": "What <info>deployment strategy</info> is used?",
+            "options": [
+                "none",
+                "kubernetes"
+            ]
+        },
+        "cluster": {
+            "question": "What is the <info>cluster domain</info>?",
+            "if": {
+                "deployment": "kubernetes"
+            },
+            "default": "k8s.example.com"
+        }
+    }
+}

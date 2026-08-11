@@ -1,0 +1,28 @@
+{
+    "name": "fixtures/sut-preset",
+    "description": "Fixture project with all scaffold variables preset.",
+    "type": "project",
+    "license": "proprietary",
+    "require": {
+        "iqual/test-assets": "^1.0"
+    },
+    "repositories": [path-repositories],
+    "config": {
+        "allow-plugins": {
+            "iqual/project-scaffold": true
+        }
+    },
+    "extra": {
+        "project-scaffold": {
+            "name": "preset-project",
+            "locations": {
+                "project-root": ".",
+                "app-root": "app",
+                "web-root": "app/web"
+            },
+            "allowed-packages": [
+                "iqual/test-assets"
+            ]
+        }
+    }
+}
