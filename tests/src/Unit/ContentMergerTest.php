@@ -87,6 +87,16 @@ class ContentMergerTest extends TestCase {
   }
 
   /**
+   * Tests merging of line-based files with multi-column lines.
+   */
+  public function testMergeLineMultiColumn() {
+    $original = "*.css text eol=crlf\n/vendor/ export-ignore";
+    $merge = "*.css text eol=lf\n*.svg -diff";
+    $expected = "*.css text eol=lf\n/vendor/ export-ignore\n*.svg -diff";
+    $this->assertSame($expected, ContentMerger::mergeContents($original, $merge, ContentMerger::MERGE_TYPE_LINE));
+  }
+
+  /**
    * Tests merging of JSON files preserving the original indentation.
    */
   public function testMergeJson() {
@@ -206,6 +216,31 @@ secret: !vault
 
 YAML;
     $this->assertSame($original, ContentMerger::mergeContents($original, $merge, ContentMerger::MERGE_TYPE_YAML));
+  }
+
+  /**
+   * Tests that custom tags with scalar values survive a changed merge.
+   */
+  public function testMergeYamlDumpsChangedCustomScalarTags() {
+    $original = <<<YAML
+# Search backend configuration.
+search:
+    conf_dir: !archive "../solr/conf"
+db:
+    type: mariadb:10.5
+
+YAML;
+    $merge = <<<YAML
+db:
+    type: mariadb:10.6
+
+YAML;
+    $result = ContentMerger::mergeContents($original, $merge, ContentMerger::MERGE_TYPE_YAML);
+    $this->assertStringContainsString('mariadb:10.6', $result);
+    $this->assertStringNotContainsString('mariadb:10.5', $result);
+    $this->assertStringContainsString('# Search backend configuration.', $result);
+    $this->assertStringContainsString('!archive', $result);
+    $this->assertStringNotContainsString('COMMENT_PLACEHOLDER', $result);
   }
 
   /**
