@@ -11,11 +11,6 @@ class OperationData {
 
   const MODE = 'mode';
   const PATH = 'path';
-  const OVERWRITE = 'overwrite';
-  const PREPEND = 'prepend';
-  const APPEND = 'append';
-  const DEFAULT = 'default';
-  const FORCE_APPEND = 'force-append';
   const ADD = 'add';
   const REPLACE = 'replace';
   const MERGE = 'merge';
@@ -89,89 +84,6 @@ class OperationData {
   }
 
   /**
-   * Determines overwrite.
-   *
-   * @return bool
-   *   Returns true if overwrite mode was selected.
-   */
-  public function overwrite() {
-    return !empty($this->data[self::OVERWRITE]);
-  }
-
-  /**
-   * Determines whether 'force-append' has been set.
-   *
-   * @return bool
-   *   Returns true if 'force-append' mode was selected.
-   */
-  public function forceAppend() {
-    if ($this->hasDefault()) {
-      return TRUE;
-    }
-    return !empty($this->data[self::FORCE_APPEND]);
-  }
-
-  /**
-   * Checks if prepend path exists.
-   *
-   * @return bool
-   *   Returns true if prepend exists.
-   */
-  public function hasPrepend() {
-    return isset($this->data[self::PREPEND]);
-  }
-
-  /**
-   * Gets prepend path.
-   *
-   * @return string
-   *   Path to prepend data
-   */
-  public function prepend() {
-    return $this->data[self::PREPEND];
-  }
-
-  /**
-   * Checks if append path exists.
-   *
-   * @return bool
-   *   Returns true if prepend exists.
-   */
-  public function hasAppend() {
-    return isset($this->data[self::APPEND]);
-  }
-
-  /**
-   * Gets append path.
-   *
-   * @return string
-   *   Path to append data
-   */
-  public function append() {
-    return $this->data[self::APPEND];
-  }
-
-  /**
-   * Checks if default path exists.
-   *
-   * @return bool
-   *   Returns true if there is default data available.
-   */
-  public function hasDefault() {
-    return isset($this->data[self::DEFAULT]);
-  }
-
-  /**
-   * Gets default path.
-   *
-   * @return string
-   *   Path to default data
-   */
-  public function default() {
-    return $this->data[self::DEFAULT];
-  }
-
-  /**
    * Normalizes metadata by converting literal values into arrays.
    *
    * Conversions performed include:
@@ -189,10 +101,6 @@ class OperationData {
   protected function normalizeScaffoldMetadata($operation, $value) {
     $defaultScaffoldMetadata = [
       self::MODE => AddOperation::ID,
-      self::PREPEND => NULL,
-      self::APPEND => NULL,
-      self::DEFAULT => NULL,
-      self::OVERWRITE => TRUE,
     ];
 
     return $this->convertScaffoldMetadata($operation, $value) + $defaultScaffoldMetadata;

@@ -20,11 +20,6 @@ class OperationDataTest extends TestCase {
     $this->assertSame('add', $data->mode());
     $this->assertTrue($data->hasPath());
     $this->assertSame('assets/add', $data->path());
-    $this->assertTrue($data->overwrite());
-    $this->assertFalse($data->forceAppend());
-    $this->assertFalse($data->hasDefault());
-    $this->assertFalse($data->hasPrepend());
-    $this->assertFalse($data->hasAppend());
   }
 
   /**
@@ -87,16 +82,6 @@ class OperationDataTest extends TestCase {
   public function testSkipOperationNameWithFalseBecomesSkip() {
     $data = new OperationData('skip', FALSE);
     $this->assertSame('skip', $data->mode());
-  }
-
-  /**
-   * Tests that a default implies force-append.
-   */
-  public function testDefaultImpliesForceAppend() {
-    $data = new OperationData('add', ['path' => 'x', 'default' => 'default/path']);
-    $this->assertTrue($data->hasDefault());
-    $this->assertSame('default/path', $data->default());
-    $this->assertTrue($data->forceAppend());
   }
 
 }
