@@ -81,7 +81,7 @@ class Interpolator {
    * item is fetched from the array, and the token [user.name] is replaced with
    * the result.
    *
-   * @param string $message
+   * @param string|null $message
    *   Message containing tokens to be replaced.
    * @param array $extra
    *   Data to use for interpolation in addition to whatever was provided to
@@ -107,7 +107,7 @@ class Interpolator {
    * keys from the provided message. Keys that do not exist in the configuration
    * are replaced with the default value.
    *
-   * @param string $message
+   * @param string|null $message
    *   String with tokens.
    * @param array $data
    *   Data to use for interpolation.
@@ -135,7 +135,7 @@ class Interpolator {
   /**
    * Finds all of the tokens in the provided message.
    *
-   * @param string $message
+   * @param string|null $message
    *   String with tokens.
    *
    * @return string[]

@@ -31,10 +31,13 @@ abstract class AbstractOperation implements OperationInterface {
   /**
    * Load the scaffold contents or otherwise generate what is needed.
    *
+   * @param array $variables
+   *   The variables available to templated scaffold files.
+   *
    * @return string
    *   The contents of the scaffold file.
    */
-  abstract protected function generateContents();
+  abstract protected function generateContents(array $variables = []);
 
   /**
    * {@inheritdoc}

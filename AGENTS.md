@@ -14,8 +14,8 @@ client projects — regressions are expensive, be conservative.
 * The maintainer reviews and pushes everything himself: don't push, don't
   open PRs.
 * Commit messages are short and past tense ("Fixed X", "Added Y").
-* phpstan runs at level 1 with a baseline of known pre-existing findings
-  (`phpstan-baseline.neon`) — don't add new entries to it.
+* phpstan runs at level 1 without a baseline — keep it clean, don't
+  introduce a new baseline.
 
 ## Orientation
 

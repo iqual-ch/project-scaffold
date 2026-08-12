@@ -29,4 +29,4 @@ The functional tests use the `composer` binary found on the `PATH`; set the `COM
 
 ## CI
 
-GitHub Actions (`.github/workflows/ci.yml`) runs static analysis (phpstan with a baseline of pre-existing findings), the unit and integration suites on PHP 8.3/8.4/8.5 with lowest and highest dependencies, and the functional suite against the oldest supported, the latest stable and the snapshot Composer version.
+GitHub Actions (`.github/workflows/ci.yml`) runs static analysis (phpstan), the unit and integration suites on PHP 8.3/8.4/8.5 with lowest and highest dependencies, and the functional suite against the oldest supported, the latest stable and the snapshot Composer version.

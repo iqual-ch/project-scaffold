@@ -38,12 +38,6 @@ class ContentMerger {
   const MERGE_TYPE_YAML = "yaml";
 
   /**
-   * ContentMerger constructor.
-   */
-  public function __construct(array $default_data = []) {
-  }
-
-  /**
    * Detects the merge type from a file path.
    *
    * @param string $file_path

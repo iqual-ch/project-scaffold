@@ -39,7 +39,7 @@ class SkipOperation extends AbstractOperation {
   /**
    * {@inheritdoc}
    */
-  protected function generateContents() {
+  protected function generateContents(array $variables = []) {
     return '';
   }
 

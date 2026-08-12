@@ -188,10 +188,10 @@ class ScaffoldOptions {
   }
 
   /**
-   * Gets a all options.
+   * Gets all options.
    *
-   * @return string
-   *   The value of the provided named location.
+   * @return array
+   *   The raw options array.
    */
   public function getAllOptions() {
     return $this->options;
