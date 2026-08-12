@@ -84,7 +84,7 @@ class OperationFactory {
     $paths = ScaffoldFilePath::sourcePaths($package_name, $package_path, $operation_data->path());
     $operations = [];
     foreach ($paths as $path) {
-      $operations[] = new addOperation($path, FALSE);
+      $operations[] = new AddOperation($path, FALSE);
     }
     return $operations;
   }
@@ -106,7 +106,7 @@ class OperationFactory {
     $paths = ScaffoldFilePath::sourcePaths($package_name, $package_path, $operation_data->path());
     $operations = [];
     foreach ($paths as $path) {
-      $operations[] = new addOperation($path, TRUE);
+      $operations[] = new AddOperation($path, TRUE);
     }
     return $operations;
   }
@@ -128,7 +128,7 @@ class OperationFactory {
     $paths = ScaffoldFilePath::sourcePaths($package_name, $package_path, $operation_data->path());
     $operations = [];
     foreach ($paths as $path) {
-      $operations[] = new mergeOperation($path, TRUE);
+      $operations[] = new MergeOperation($path, TRUE);
     }
     return $operations;
   }
