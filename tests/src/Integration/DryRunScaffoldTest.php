@@ -134,4 +134,30 @@ class DryRunScaffoldTest extends TestCase {
     $this->assertFileDoesNotExist($sut . '/settings.php');
   }
 
+  /**
+   * Tests that a dry-run does not dispatch the scaffold command scripts.
+   */
+  public function testDryRunDoesNotDispatchScripts() {
+    $sut = $this->fixtures->cloneFixtureProject('sut-preset');
+    $definition = json_decode(file_get_contents($sut . '/composer.json'), TRUE);
+    $definition['scripts'] = [
+      'pre-project-scaffold-cmd' => 'iqual\\Composer\\ProjectScaffold\\Tests\\Integration\\ScaffoldHooks::hook',
+      'post-project-scaffold-cmd' => 'iqual\\Composer\\ProjectScaffold\\Tests\\Integration\\ScaffoldHooks::hook',
+    ];
+    file_put_contents($sut . '/composer.json', json_encode($definition, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+
+    $io = $this->scaffold($sut, dry_run: TRUE);
+    $output = $io->getOutput();
+
+    $this->assertStringNotContainsString('pre-project-scaffold-cmd hook', $output);
+    $this->assertStringNotContainsString('post-project-scaffold-cmd hook', $output);
+
+    // A real run on the same project still dispatches both scripts.
+    $io = $this->scaffold($sut);
+    $output = $io->getOutput();
+
+    $this->assertStringContainsString('pre-project-scaffold-cmd hook for fixtures/sut-preset', $output);
+    $this->assertStringContainsString('post-project-scaffold-cmd hook for fixtures/sut-preset', $output);
+  }
+
 }

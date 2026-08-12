@@ -175,9 +175,12 @@ class Handler {
       return;
     }
 
-    // Call any pre-scaffold scripts that may be defined.
+    // Call any pre-scaffold scripts that may be defined. Like composer's
+    // own --dry-run, a dry-run does not dispatch any scripts.
     $dispatcher = $this->composer->getEventDispatcher();
-    $dispatcher->dispatchScript(self::PRE_PROJECT_SCAFFOLD_CMD);
+    if ($run_options->dryRun() === FALSE) {
+      $dispatcher->dispatchScript(self::PRE_PROJECT_SCAFFOLD_CMD);
+    }
 
     // Fetch the list of file mappings from each allowed package and normalize
     // them.
@@ -250,7 +253,9 @@ class Handler {
     }
 
     // Call post-scaffold scripts.
-    $dispatcher->dispatchScript(self::POST_PROJECT_SCAFFOLD_CMD);
+    if ($run_options->dryRun() === FALSE) {
+      $dispatcher->dispatchScript(self::POST_PROJECT_SCAFFOLD_CMD);
+    }
   }
 
   /**
