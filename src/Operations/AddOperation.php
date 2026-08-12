@@ -4,6 +4,7 @@ namespace iqual\Composer\ProjectScaffold\Operations;
 
 use Composer\IO\IOInterface;
 use Composer\Util\Filesystem;
+use iqual\Composer\ProjectScaffold\Options\RunOptions;
 use iqual\Composer\ProjectScaffold\Options\ScaffoldOptions;
 use iqual\Composer\ProjectScaffold\ScaffoldFiles\ScaffoldFilePath;
 use iqual\Composer\ProjectScaffold\ScaffoldFiles\ScaffoldResult;
@@ -96,14 +97,15 @@ class AddOperation extends AbstractOperation {
   /**
    * {@inheritdoc}
    */
-  public function process(ScaffoldFilePath $destination, IOInterface $io, ScaffoldOptions $options, ScaffoldOptions $package_options) {
+  public function process(ScaffoldFilePath $destination, IOInterface $io, ScaffoldOptions $options, ScaffoldOptions $package_options, RunOptions $run_options) {
     $fs = new Filesystem();
     $destination_path = $destination->fullPath();
 
     // Do nothing if overwrite is 'false' and a file already exists at the
-    // destination.
+    // destination. A forced run overwrites the existing file anyhow,
+    // discarding any local modifications.
     $interpolator = $destination->getInterpolator();
-    if ($this->overwrite === FALSE && file_exists($destination_path)) {
+    if ($this->overwrite === FALSE && $run_options->force() === FALSE && file_exists($destination_path)) {
       $io->write($interpolator->interpolate("  - Skipping <info>[dest-full-path]</info> because it already exists and overwrite is <comment>false</comment>."), TRUE, 4);
       return new ScaffoldResult($destination, FALSE);
     }

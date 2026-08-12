@@ -8,6 +8,7 @@ use Composer\IO\BufferIO;
 use Composer\Package\Loader\ArrayLoader;
 use Composer\Util\Filesystem;
 use iqual\Composer\ProjectScaffold\Handler;
+use iqual\Composer\ProjectScaffold\Options\RunOptions;
 use iqual\Composer\ProjectScaffold\Util\Interpolator;
 use Symfony\Component\Console\Output\OutputInterface;
 
@@ -263,14 +264,17 @@ class Fixtures {
    *   The IO object to run with.
    * @param bool $init
    *   Whether to run the init (always prompt) operation instead.
+   * @param bool $force
+   *   Whether to force a hard re-scaffold of existing files.
    */
-  public function runScaffold(Composer $composer, BufferIO $io, bool $init = FALSE) {
+  public function runScaffold(Composer $composer, BufferIO $io, bool $init = FALSE, bool $force = FALSE) {
     $handler = new Handler($composer, $io);
+    $run_options = new RunOptions(force: $force);
     if ($init) {
-      $handler->init();
+      $handler->init($run_options);
     }
     else {
-      $handler->scaffold();
+      $handler->scaffold($run_options);
     }
   }
 

@@ -4,6 +4,7 @@ namespace iqual\Composer\ProjectScaffold\ScaffoldFiles;
 
 use Composer\IO\IOInterface;
 use iqual\Composer\ProjectScaffold\Operations\OperationInterface;
+use iqual\Composer\ProjectScaffold\Options\RunOptions;
 use iqual\Composer\ProjectScaffold\Options\ScaffoldOptions;
 
 /**
@@ -118,12 +119,14 @@ class ScaffoldFileInfo {
    *   symlink.
    * @param \iqual\Composer\ProjectScaffold\Options\ScaffoldOptions $package_options
    *   Pacakge options.
+   * @param \iqual\Composer\ProjectScaffold\Options\RunOptions $run_options
+   *   The flags of this scaffold run.
    *
    * @return \iqual\Composer\ProjectScaffold\Operations\ScaffoldResult
    *   The scaffold result.
    */
-  public function process(IOInterface $io, ScaffoldOptions $options, ScaffoldOptions $package_options) {
-    return $this->op()->process($this->destination, $io, $options, $package_options);
+  public function process(IOInterface $io, ScaffoldOptions $options, ScaffoldOptions $package_options, RunOptions $run_options) {
+    return $this->op()->process($this->destination, $io, $options, $package_options, $run_options);
   }
 
   /**

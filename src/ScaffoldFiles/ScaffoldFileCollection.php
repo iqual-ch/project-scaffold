@@ -4,6 +4,7 @@ namespace iqual\Composer\ProjectScaffold\ScaffoldFiles;
 
 use Composer\IO\IOInterface;
 use iqual\Composer\ProjectScaffold\Util\Interpolator;
+use iqual\Composer\ProjectScaffold\Options\RunOptions;
 use iqual\Composer\ProjectScaffold\Options\ScaffoldOptions;
 use iqual\Composer\ProjectScaffold\Operations\SkipOperation;
 
@@ -206,11 +207,13 @@ class ScaffoldFileCollection implements \IteratorAggregate {
    *   The scaffold options.
    * @param array $package_options
    *   The array of package scaffold options.
+   * @param \iqual\Composer\ProjectScaffold\Options\RunOptions $run_options
+   *   The flags of this scaffold run.
    *
    * @return \iqual\Composer\ProjectScaffold\ScaffoldFiles\ScaffoldResult[]
    *   The results array.
    */
-  public function processScaffoldFiles(IOInterface $io, ScaffoldOptions $scaffold_options, array $package_options) {
+  public function processScaffoldFiles(IOInterface $io, ScaffoldOptions $scaffold_options, array $package_options, RunOptions $run_options) {
     $results = [];
     foreach ($this as $project_name => $scaffold_files) {
       $process_message = TRUE;
@@ -226,7 +229,7 @@ class ScaffoldFileCollection implements \IteratorAggregate {
           $io->write("Processing project scaffold for <comment>{$project_name}</comment>:");
           $process_message = FALSE;
         }
-        $results[$scaffold_file->destination()->relativePath()] = $scaffold_file->process($io, $scaffold_options, $package_options[$project_name]);
+        $results[$scaffold_file->destination()->relativePath()] = $scaffold_file->process($io, $scaffold_options, $package_options[$project_name], $run_options);
       }
       $io->write("All assets have been scaffolded.");
     }

@@ -16,6 +16,7 @@ use iqual\Composer\ProjectScaffold\Operations\OperationData;
 use iqual\Composer\ProjectScaffold\Operations\OperationFactory;
 use iqual\Composer\ProjectScaffold\ScaffoldFiles\ScaffoldFileCollection;
 use iqual\Composer\ProjectScaffold\Options\ManageOptions;
+use iqual\Composer\ProjectScaffold\Options\RunOptions;
 use iqual\Composer\ProjectScaffold\Options\ScaffoldOptions;
 use iqual\Composer\ProjectScaffold\Util\IOOutput;
 
@@ -146,8 +147,12 @@ class Handler {
 
   /**
    * Copies all scaffold files from source to destination.
+   *
+   * @param \iqual\Composer\ProjectScaffold\Options\RunOptions|null $run_options
+   *   (optional) The flags of this scaffold run.
    */
-  public function scaffold(bool $override_prompt = FALSE) {
+  public function scaffold(?RunOptions $run_options = NULL) {
+    $run_options = $run_options ?? new RunOptions();
     // Recursively get the list of allowed packages. Only allowed packages
     // may declare scaffold files. Note that the top-level composer.json file
     // is implicitly allowed.
@@ -192,7 +197,7 @@ class Handler {
       $scaffold_options->setOption("allowed-packages", $allowed_packages_array);
     }
 
-    $scaffold_package_options = $this->getOptionsFromPackages($allowed_packages, $modified_packages, $override_prompt);
+    $scaffold_package_options = $this->getOptionsFromPackages($allowed_packages, $modified_packages, $run_options->prompt());
 
     // Create a collection of scaffolded files to process. This determines which
     // take priority and which are combined. Destinations matching the root
@@ -200,12 +205,18 @@ class Handler {
     $scaffold_files = new ScaffoldFileCollection($assets, $location_replacements, $scaffold_options->ignoreFiles());
 
     // Get the scaffold files whose contents on disk match what we are about to
-    // write. These files are converted to a skip operation.
-    $unchanged = $scaffold_files->checkUnchanged();
-    $scaffold_files->filterFiles($unchanged, $location_replacements);
+    // write. These files are converted to a skip operation. A forced run
+    // skips this detection: for 'merge' assets it compares the merged result
+    // with the disk contents, which would keep the local values that a
+    // forced run must discard (and it would cache the merged contents on
+    // the operations before they are processed).
+    if ($run_options->force() === FALSE) {
+      $unchanged = $scaffold_files->checkUnchanged();
+      $scaffold_files->filterFiles($unchanged, $location_replacements);
+    }
 
     // Process the list of scaffolded files.
-    $scaffold_files->processScaffoldFiles($this->io, $scaffold_options, $scaffold_package_options);
+    $scaffold_files->processScaffoldFiles($this->io, $scaffold_options, $scaffold_package_options, $run_options);
 
     if ($scaffold_options->getModified() === TRUE) {
       // If the scaffolding options have been modified,
@@ -234,10 +245,15 @@ class Handler {
   }
 
   /**
-   * Copies all scaffold files from source to destination.
+   * Copies all scaffold files from source to destination, always prompting.
+   *
+   * @param \iqual\Composer\ProjectScaffold\Options\RunOptions|null $run_options
+   *   (optional) The flags of this scaffold run. The prompt flag is
+   *   always enabled.
    */
-  public function init() {
-    $this->scaffold(TRUE);
+  public function init(?RunOptions $run_options = NULL) {
+    $run_options = $run_options ?? new RunOptions();
+    $this->scaffold($run_options->withPrompt(TRUE));
   }
 
   /**

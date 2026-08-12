@@ -4,6 +4,7 @@ namespace iqual\Composer\ProjectScaffold\Operations;
 
 use Composer\IO\IOInterface;
 use Composer\Util\Filesystem;
+use iqual\Composer\ProjectScaffold\Options\RunOptions;
 use iqual\Composer\ProjectScaffold\Options\ScaffoldOptions;
 use iqual\Composer\ProjectScaffold\ScaffoldFiles\ScaffoldFilePath;
 use iqual\Composer\ProjectScaffold\ScaffoldFiles\ScaffoldResult;
@@ -121,7 +122,7 @@ class MergeOperation extends AbstractOperation {
   /**
    * {@inheritdoc}
    */
-  public function process(ScaffoldFilePath $destination, IOInterface $io, ScaffoldOptions $options, ScaffoldOptions $package_options) {
+  public function process(ScaffoldFilePath $destination, IOInterface $io, ScaffoldOptions $options, ScaffoldOptions $package_options, RunOptions $run_options) {
     $fs = new Filesystem();
     $destination_path = $destination->fullPath();
 
@@ -131,6 +132,13 @@ class MergeOperation extends AbstractOperation {
     if ($this->overwrite === FALSE && file_exists($destination_path)) {
       $io->write($interpolator->interpolate("  - Skipping <info>[dest-full-path]</info> because it already exists and overwrite is <comment>false</comment>."), TRUE, 4);
       return new ScaffoldResult($destination, FALSE);
+    }
+
+    // A forced run discards the destination contents, so that the source
+    // is rendered as for a new file and replaces the destination instead
+    // of being merged into it. Locally merged values are lost.
+    if ($run_options->force() === TRUE) {
+      $this->originalContents = NULL;
     }
 
     // Get the root scaffold options.

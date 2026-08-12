@@ -5,6 +5,7 @@ namespace iqual\Composer\ProjectScaffold\Operations;
 use Composer\IO\IOInterface;
 use iqual\Composer\ProjectScaffold\ScaffoldFiles\ScaffoldFilePath;
 use iqual\Composer\ProjectScaffold\ScaffoldFiles\ScaffoldResult;
+use iqual\Composer\ProjectScaffold\Options\RunOptions;
 use iqual\Composer\ProjectScaffold\Options\ScaffoldOptions;
 
 /**
@@ -53,7 +54,7 @@ class SkipOperation extends AbstractOperation {
   /**
    * {@inheritdoc}
    */
-  public function process(ScaffoldFilePath $destination, IOInterface $io, ScaffoldOptions $options, ScaffoldOptions $package_options) {
+  public function process(ScaffoldFilePath $destination, IOInterface $io, ScaffoldOptions $options, ScaffoldOptions $package_options, RunOptions $run_options) {
     $interpolator = $destination->getInterpolator();
     $io->write($interpolator->interpolate($this->message), TRUE, 4);
     return new ScaffoldResult($destination, FALSE);

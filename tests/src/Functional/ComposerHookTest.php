@@ -53,6 +53,44 @@ class ComposerHookTest extends FunctionalTestBase {
   }
 
   /**
+   * Tests that `composer project:scaffold --force` re-scaffolds everything.
+   */
+  public function testProjectScaffoldForceOverwritesLocalModifications() {
+    $sut = $this->installFunctionalProject();
+
+    // Modify an 'add' destination and merge a local value into a 'merge'
+    // destination.
+    file_put_contents($sut . '/settings.php', "<?php\n// Locally modified.\n");
+    file_put_contents($sut . '/.env', file_get_contents($sut . '/.env') . "LOCAL_VALUE=1\n");
+
+    // Without --force both local modifications survive a scaffold run.
+    $this->runComposer(['project:scaffold'], $sut);
+    $this->assertSame("<?php\n// Locally modified.\n", file_get_contents($sut . '/settings.php'));
+    $this->assertSame("APP_NAME=functional-project\nPHP_VERSION=8.2\nLOCAL_VALUE=1\n", file_get_contents($sut . '/.env'));
+
+    // With --force the 'add' destination is overwritten and the 'merge'
+    // destination is replaced with a fresh render of its source.
+    $process = $this->runComposer(['project:scaffold', '--force'], $sut);
+    $this->assertStringContainsString('All assets have been scaffolded.', $this->allOutput($process));
+    $this->assertStringContainsString('Default settings scaffolded once', file_get_contents($sut . '/settings.php'));
+    $this->assertSame("APP_NAME=functional-project\nPHP_VERSION=8.2\n", file_get_contents($sut . '/.env'));
+  }
+
+  /**
+   * Tests that `composer project:init --force` re-scaffolds everything.
+   */
+  public function testProjectInitForceOverwritesLocalModifications() {
+    $sut = $this->installFunctionalProject();
+
+    file_put_contents($sut . '/settings.php', "<?php\n// Locally modified.\n");
+    $process = $this->runComposer(['project:init', '--force', '--no-interaction'], $sut);
+
+    $this->assertStringContainsString('All assets have been scaffolded.', $this->allOutput($process));
+    $this->assertStringContainsString('Default settings scaffolded once', file_get_contents($sut . '/settings.php'));
+    $this->assertSame("APP_NAME=functional-project\nPHP_VERSION=8.2\n", file_get_contents($sut . '/.env'));
+  }
+
+  /**
    * Tests that `composer project:init` runs non-interactively.
    */
   public function testProjectInitCommandRuns() {

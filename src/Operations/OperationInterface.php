@@ -4,6 +4,7 @@ namespace iqual\Composer\ProjectScaffold\Operations;
 
 use Composer\IO\IOInterface;
 use iqual\Composer\ProjectScaffold\ScaffoldFiles\ScaffoldFilePath;
+use iqual\Composer\ProjectScaffold\Options\RunOptions;
 use iqual\Composer\ProjectScaffold\Options\ScaffoldOptions;
 
 /**
@@ -40,11 +41,14 @@ interface OperationInterface {
    *   Various options that may alter the behavior of the operation.
    * @param \iqual\Composer\ProjectScaffold\Options\ScaffoldOptions $package_options
    *   Package options that may alter the behavior of the operation.
+   * @param \iqual\Composer\ProjectScaffold\Options\RunOptions $run_options
+   *   Flags of the current scaffold run that may alter the behavior of
+   *   the operation.
    *
    * @return \iqual\Composer\ProjectScaffold\ScaffoldFiles\ScaffoldResult
    *   Result of the scaffolding operation.
    */
-  public function process(ScaffoldFilePath $destination, IOInterface $io, ScaffoldOptions $options, ScaffoldOptions $package_options);
+  public function process(ScaffoldFilePath $destination, IOInterface $io, ScaffoldOptions $options, ScaffoldOptions $package_options, RunOptions $run_options);
 
   /**
    * Determines what to do if operation is used at same path as a previous op.

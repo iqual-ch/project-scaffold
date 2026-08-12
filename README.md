@@ -37,6 +37,12 @@ Allow the plugin when Composer asks, then require one or more asset packages. Th
 
 Scaffolding also runs automatically after `composer install`, `update`, `require` and `create-project`.
 
+### Forcing a hard re-scaffold
+
+Both `project:scaffold` and `project:init` accept a `--force` flag that re-scaffolds a project from scratch: `add` assets overwrite files that already exist at their destination, and `merge` assets replace the destination with a fresh render of their source instead of merging values into it. `replace` assets always overwrite, with or without the flag.
+
+> **Warning:** with `--force` any local modifications to scaffolded files are **lost** — including local edits to `add` files and values that were merged into `.env`, line-based, JSON or YAML files. Commit or back up local changes before running it.
+
 ### Disabling automatic scaffolding
 
 Automatic scaffolding after `install` and `update` can be turned off; the explicit `project:*` commands keep working either way:

@@ -3,6 +3,7 @@
 namespace iqual\Composer\ProjectScaffold\Operations;
 
 use Composer\IO\IOInterface;
+use iqual\Composer\ProjectScaffold\Options\RunOptions;
 use iqual\Composer\ProjectScaffold\Options\ScaffoldOptions;
 use iqual\Composer\ProjectScaffold\ScaffoldFiles\ScaffoldFilePath;
 use iqual\Composer\ProjectScaffold\ScaffoldFiles\ScaffoldResult;
@@ -54,7 +55,7 @@ class ReadOperation extends AbstractOperation {
   /**
    * {@inheritdoc}
    */
-  public function process(ScaffoldFilePath $destination, IOInterface $io, ScaffoldOptions $options, ScaffoldOptions $package_options) {
+  public function process(ScaffoldFilePath $destination, IOInterface $io, ScaffoldOptions $options, ScaffoldOptions $package_options, RunOptions $run_options) {
     $package_name = $package_options->getPackageName();
 
     // Log initialization.
