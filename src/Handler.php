@@ -3,6 +3,7 @@
 namespace iqual\Composer\ProjectScaffold;
 
 use Composer\Composer;
+use Composer\Factory;
 use Composer\Installer\PackageEvent;
 use Composer\IO\IOInterface;
 use Composer\Package\PackageInterface;
@@ -10,12 +11,12 @@ use Composer\Util\Filesystem;
 use Composer\Console\Application;
 use Composer\Command\ConfigCommand;
 use Symfony\Component\Console\Input\ArrayInput;
-use Symfony\Component\Console\Output\ConsoleOutput;
 use iqual\Composer\ProjectScaffold\Operations\OperationData;
 use iqual\Composer\ProjectScaffold\Operations\OperationFactory;
 use iqual\Composer\ProjectScaffold\ScaffoldFiles\ScaffoldFileCollection;
 use iqual\Composer\ProjectScaffold\Options\ManageOptions;
 use iqual\Composer\ProjectScaffold\Options\ScaffoldOptions;
+use iqual\Composer\ProjectScaffold\Util\IOOutput;
 
 /**
  * Core class of the plugin.
@@ -332,7 +333,7 @@ class Handler {
       'setting-value' => [json_encode($scaffold_extras)],
       '--json' => TRUE,
     ]);
-    $output = new ConsoleOutput();
+    $output = new IOOutput($this->io);
     $command = new ConfigCommand();
     $command->setComposer($this->composer);
     $command->run($input, $output);
@@ -342,8 +343,16 @@ class Handler {
 
   /**
    * Update the `composer.lock`.
+   *
+   * Does nothing when the project has no `composer.lock` file.
    */
   protected function updateComposerLock() {
+    // Skip the update when the project has no lock file.
+    $composer_file = $this->composer->getConfig()->getConfigSource()->getName();
+    if (!file_exists(Factory::getLockFile($composer_file))) {
+      return;
+    }
+
     $this->io->write("Updating the hash in the composer.lock file.");
 
     // Update the composer.lock file with `update --lock`
@@ -357,7 +366,7 @@ class Handler {
       '--interactive' => FALSE,
       '--ignore-platform-reqs' => TRUE,
     ]);
-    $output = new ConsoleOutput();
+    $output = new IOOutput($this->io);
     $application = new Application();
     $application->setAutoExit(FALSE);
     $application->run($input, $output);

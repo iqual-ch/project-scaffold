@@ -83,6 +83,11 @@ class InteractiveQuestionsTest extends TestCase {
     $this->assertSame('kubernetes', $extra['deployment']);
     $this->assertSame('k8s.example.com', $extra['cluster']);
     $this->assertStringContainsString("Writing variables to 'extra' section of top-level composer.json file.", $output);
+
+    // The project has no composer.lock file, so the lock file update is
+    // skipped without any output.
+    $this->assertStringNotContainsString('Updating the hash in the composer.lock file.', $output);
+    $this->assertStringNotContainsString('Cannot update lock file', $output);
   }
 
   /**
