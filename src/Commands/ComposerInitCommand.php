@@ -28,6 +28,7 @@ class ComposerInitCommand extends BaseCommand {
       ->setAliases(['project:update'])
       ->setDescription('Update the iqual init files.')
       ->addOption('force', NULL, InputOption::VALUE_NONE, 'Hard re-scaffold: overwrite existing "add" files and replace "merge" files with a fresh render. Local modifications to scaffolded files are LOST.')
+      ->addOption('dry-run', NULL, InputOption::VALUE_NONE, 'Report what the scaffolding would do without changing anything: no files are written or deleted and no variables are saved to the composer.json file.')
       ->setHelp(
         <<<EOT
 The <info>project:init</info> command places the init files in their
@@ -49,6 +50,14 @@ merging values into it.
 
 <warning>Warning: with --force any local modifications to scaffolded files are
 lost, including values that were merged into .env, JSON or YAML files.</warning>
+
+With <info>--dry-run</info> the scaffolding is only simulated: every operation
+reports what it would do to its destination, marked with <comment>(dry-run)</comment>,
+but nothing is changed. No files are created, overwritten, merged or deleted,
+and no variables or lock file hash are written to the composer.json and
+composer.lock files. The package questions are still asked, so the reported
+actions match a real run, but the answers are not saved. Combine
+<info>--dry-run</info> with <info>--force</info> to preview a hard re-scaffold.
 EOT
             );
 
@@ -58,7 +67,7 @@ EOT
    * {@inheritdoc}
    */
   protected function execute(InputInterface $input, OutputInterface $output): int {
-    $run_options = new RunOptions(force: (bool) $input->getOption('force'));
+    $run_options = new RunOptions(force: (bool) $input->getOption('force'), dry_run: (bool) $input->getOption('dry-run'));
     $handler = new Handler($this->requireComposer(), $this->getIO());
     $handler->init($run_options);
     return 0;

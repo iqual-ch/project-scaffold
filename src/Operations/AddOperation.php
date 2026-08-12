@@ -133,6 +133,11 @@ class AddOperation extends AbstractOperation {
     if (empty($new_contents)) {
       // @todo maybe change mechanism and add DeleteOperation
       if (file_exists($destination_path)) {
+        // A dry-run only reports the deletion instead of performing it.
+        if ($run_options->dryRun() === TRUE) {
+          $io->write($interpolator->interpolate("  - Deleting <info>[dest-full-path]</info>. (dry-run)"));
+          return new ScaffoldResult($destination, FALSE);
+        }
         try {
           // Delete the file at the destination.
           return $this->deleteScaffold($destination, $io);
@@ -148,6 +153,12 @@ class AddOperation extends AbstractOperation {
     }
     // If there is content try to write the content.
     else {
+      // A dry-run only reports the write instead of performing it.
+      if ($run_options->dryRun() === TRUE) {
+        $operation_type = $this->overwrite ? "Replace" : "Add";
+        $io->write($interpolator->interpolate("  - Writing <info>[dest-full-path]</info> ($operation_type) (dry-run)"));
+        return new ScaffoldResult($destination, $this->overwrite);
+      }
       try {
         // Make sure the directory exists.
         $fs->ensureDirectoryExists(dirname($destination_path));

@@ -43,6 +43,10 @@ Both `project:scaffold` and `project:init` accept a `--force` flag that re-scaff
 
 > **Warning:** with `--force` any local modifications to scaffolded files are **lost** — including local edits to `add` files and values that were merged into `.env`, line-based, JSON or YAML files. Commit or back up local changes before running it.
 
+### Previewing changes with a dry run
+
+Both commands also accept a `--dry-run` flag that reports what each operation would do — every would-be action is marked with `(dry-run)` in the output — without changing anything: no files are created, overwritten, merged or deleted, and no variables or lock file hash are written to `composer.json` and `composer.lock`. Package questions are still evaluated (and, with `project:init`, asked) so the preview matches a real run, but the answers are not saved. Combine `--dry-run` with `--force` to preview a hard re-scaffold. Note that the `pre-`/`post-project-scaffold-cmd` scripts are still dispatched during a dry run.
+
 ### Disabling automatic scaffolding
 
 Automatic scaffolding after `install` and `update` can be turned off; the explicit `project:*` commands keep working either way:

@@ -266,10 +266,12 @@ class Fixtures {
    *   Whether to run the init (always prompt) operation instead.
    * @param bool $force
    *   Whether to force a hard re-scaffold of existing files.
+   * @param bool $dry_run
+   *   Whether to only report the operations without applying them.
    */
-  public function runScaffold(Composer $composer, BufferIO $io, bool $init = FALSE, bool $force = FALSE) {
+  public function runScaffold(Composer $composer, BufferIO $io, bool $init = FALSE, bool $force = FALSE, bool $dry_run = FALSE) {
     $handler = new Handler($composer, $io);
-    $run_options = new RunOptions(force: $force);
+    $run_options = new RunOptions(force: $force, dry_run: $dry_run);
     if ($init) {
       $handler->init($run_options);
     }

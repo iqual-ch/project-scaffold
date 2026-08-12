@@ -35,16 +35,31 @@ class RunOptions {
   protected $force;
 
   /**
+   * Whether the run only reports the operations without applying them.
+   *
+   * When enabled, the operations report what they would do to each
+   * destination, but nothing is written to disk: no files are created,
+   * overwritten, merged or deleted, and no variables or lock file hash
+   * are written back to the composer.json and composer.lock files.
+   *
+   * @var bool
+   */
+  protected $dryRun;
+
+  /**
    * RunOptions constructor.
    *
    * @param bool $prompt
    *   Whether the user should always be prompted for the package questions.
    * @param bool $force
    *   Whether existing destination files should be forcefully re-scaffolded.
+   * @param bool $dry_run
+   *   Whether the run only reports the operations without applying them.
    */
-  public function __construct(bool $prompt = FALSE, bool $force = FALSE) {
+  public function __construct(bool $prompt = FALSE, bool $force = FALSE, bool $dry_run = FALSE) {
     $this->prompt = $prompt;
     $this->force = $force;
+    $this->dryRun = $dry_run;
   }
 
   /**
@@ -65,6 +80,16 @@ class RunOptions {
    */
   public function force() {
     return $this->force;
+  }
+
+  /**
+   * Gets whether the run only reports the operations without applying them.
+   *
+   * @return bool
+   *   True if nothing should be written to disk.
+   */
+  public function dryRun() {
+    return $this->dryRun;
   }
 
   /**

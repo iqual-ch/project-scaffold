@@ -91,6 +91,47 @@ class ComposerHookTest extends FunctionalTestBase {
   }
 
   /**
+   * Tests that `composer project:scaffold --dry-run` changes no files.
+   */
+  public function testProjectScaffoldDryRunDoesNotChangeFiles() {
+    $sut = $this->installFunctionalProject();
+
+    file_put_contents($sut . '/README.md', 'manually changed');
+    $original_composer_json = file_get_contents($sut . '/composer.json');
+    $original_composer_lock = file_get_contents($sut . '/composer.lock');
+
+    $process = $this->runComposer(['project:scaffold', '--dry-run'], $sut);
+    $output = $this->allOutput($process);
+
+    // The would-be replace is reported, but the file is not restored and
+    // the composer files are untouched.
+    $this->assertStringContainsString('Performing a dry-run, no changes will be written.', $output);
+    $this->assertStringContainsString('(Replace) (dry-run)', $output);
+    $this->assertSame('manually changed', file_get_contents($sut . '/README.md'));
+    $this->assertSame($original_composer_json, file_get_contents($sut . '/composer.json'));
+    $this->assertSame($original_composer_lock, file_get_contents($sut . '/composer.lock'));
+  }
+
+  /**
+   * Tests that `composer project:init --dry-run` does not save the answers.
+   */
+  public function testProjectInitDryRunDoesNotWriteVariables() {
+    $sut = $this->installFunctionalProject();
+
+    $original_composer_json = file_get_contents($sut . '/composer.json');
+    $original_composer_lock = file_get_contents($sut . '/composer.lock');
+
+    $process = $this->runComposer(['project:init', '--dry-run', '--no-interaction'], $sut);
+    $output = $this->allOutput($process);
+
+    // A real init run writes the collected variables to the composer.json
+    // file and updates the lock file hash; the dry-run only reports it.
+    $this->assertStringContainsString("Writing variables to 'extra' section of top-level composer.json file. (dry-run)", $output);
+    $this->assertSame($original_composer_json, file_get_contents($sut . '/composer.json'));
+    $this->assertSame($original_composer_lock, file_get_contents($sut . '/composer.lock'));
+  }
+
+  /**
    * Tests that `composer project:init` runs non-interactively.
    */
   public function testProjectInitCommandRuns() {

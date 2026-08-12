@@ -153,6 +153,9 @@ class Handler {
    */
   public function scaffold(?RunOptions $run_options = NULL) {
     $run_options = $run_options ?? new RunOptions();
+    if ($run_options->dryRun() === TRUE) {
+      $this->io->write("Performing a dry-run, no changes will be written.");
+    }
     // Recursively get the list of allowed packages. Only allowed packages
     // may declare scaffold files. Note that the top-level composer.json file
     // is implicitly allowed.
@@ -220,10 +223,16 @@ class Handler {
 
     if ($scaffold_options->getModified() === TRUE) {
       // If the scaffolding options have been modified,
-      // write them to the composer files.
-      $this->writeOptionsToComposerFiles($scaffold_options);
+      // write them to the composer files. A dry-run only
+      // reports the write-back instead of performing it.
+      if ($run_options->dryRun() === TRUE) {
+        $this->io->write("Writing variables to 'extra' section of top-level composer.json file. (dry-run)");
+      }
+      else {
+        $this->writeOptionsToComposerFiles($scaffold_options);
+      }
     }
-    else {
+    elseif ($run_options->dryRun() === FALSE) {
       // If the scaffolding options have not been modified
       // during the command execution, they might still have
       // been changed manually before execution.

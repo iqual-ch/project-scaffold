@@ -168,6 +168,11 @@ class MergeOperation extends AbstractOperation {
     }
     // If there is content try to write the content.
     else {
+      // A dry-run only reports the write instead of performing it.
+      if ($run_options->dryRun() === TRUE) {
+        $io->write($interpolator->interpolate("  - Writing <info>[dest-full-path]</info> (Merge) (dry-run)"));
+        return new ScaffoldResult($destination, $this->overwrite);
+      }
       try {
         // Make sure the directory exists.
         $fs->ensureDirectoryExists(dirname($destination_path));
