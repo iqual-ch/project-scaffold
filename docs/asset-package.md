@@ -82,7 +82,7 @@ An example `composer.json` of the project asset package:
     "extra": {
         "project-scaffold": {
             "runtime": {
-                "php_version": 8.1,
+                "php_version": 8.3,
                 "db_version": 10.6
             },
             "workflows": {
@@ -118,9 +118,9 @@ What variables are required and what the user should be prompted when the packag
         "runtime.php_version": {
             "question": "What <info>PHP version</info> should be installed?",
             "options": [
-                "8.0",
-                "8.1",
-                "8.2"
+                "8.3",
+                "8.4",
+                "8.5"
             ]
         },
         "runtime.db_version": {
