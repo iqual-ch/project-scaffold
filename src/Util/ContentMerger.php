@@ -216,6 +216,13 @@ class ContentMerger {
     // Detect the EOL of the contents.
     $eol = self::detectContentEol($contents);
 
+    // For line-based types, strip a single terminal EOL before splitting
+    // so that appended lines do not create a spurious blank line. Blank
+    // lines within the contents are preserved.
+    if (($type == self::MERGE_TYPE_ENV || $type == self::MERGE_TYPE_LINE) && str_ends_with($contents, $eol)) {
+      $contents = substr($contents, 0, -strlen($eol));
+    }
+
     // Write merges to .env files.
     if ($type == self::MERGE_TYPE_ENV) {
       // Get contents line-by-line and process in reverse order.
@@ -241,8 +248,9 @@ class ContentMerger {
         }
       }
 
-      // Write file line-by-line and add new contents.
-      $merged_contents = implode($eol, array_merge(array_reverse($reversed_lines), $new_contents));
+      // Write file line-by-line and add new contents, always ending
+      // with a single trailing EOL.
+      $merged_contents = implode($eol, array_merge(array_reverse($reversed_lines), $new_contents)) . $eol;
     }
     // Write merges to "line"-type files.
     elseif ($type == self::MERGE_TYPE_LINE) {
@@ -269,8 +277,9 @@ class ContentMerger {
         }
       }
 
-      // Write file line-by-line and add new contents.
-      $merged_contents = implode($eol, array_merge(array_reverse($reversed_lines), $new_contents));
+      // Write file line-by-line and add new contents, always ending
+      // with a single trailing EOL.
+      $merged_contents = implode($eol, array_merge(array_reverse($reversed_lines), $new_contents)) . $eol;
     }
     // Write merges to JSON files.
     elseif ($type == self::MERGE_TYPE_JSON) {

@@ -79,11 +79,27 @@ class ContentMergerTest extends TestCase {
 
   /**
    * Tests merging of environment files.
+   *
+   * A destination without a trailing newline is merged without losing or
+   * joining lines and gains a single trailing newline.
    */
   public function testMergeEnv() {
     $original = "APP_NAME=old\nDEBUG=true";
     $merge = "APP_NAME=new\nPORT=80";
-    $expected = "APP_NAME=new\nDEBUG=true\nPORT=80";
+    $expected = "APP_NAME=new\nDEBUG=true\nPORT=80\n";
+    $this->assertSame($expected, ContentMerger::mergeContents($original, $merge, ContentMerger::MERGE_TYPE_ENV));
+  }
+
+  /**
+   * Tests appending to a newline-terminated environment file.
+   *
+   * No blank line is inserted before the appended variables and the output
+   * ends with exactly one trailing newline.
+   */
+  public function testMergeEnvIntoNewlineTerminatedFile() {
+    $original = "APP_NAME=old\nDEBUG=true\n";
+    $merge = "APP_NAME=new\nPORT=80";
+    $expected = "APP_NAME=new\nDEBUG=true\nPORT=80\n";
     $this->assertSame($expected, ContentMerger::mergeContents($original, $merge, ContentMerger::MERGE_TYPE_ENV));
   }
 
@@ -93,17 +109,59 @@ class ContentMergerTest extends TestCase {
   public function testMergeEnvKeepsCrlf() {
     $original = "APP_NAME=old\r\nDEBUG=true";
     $merge = "APP_NAME=new";
-    $expected = "APP_NAME=new\r\nDEBUG=true";
+    $expected = "APP_NAME=new\r\nDEBUG=true\r\n";
     $this->assertSame($expected, ContentMerger::mergeContents($original, $merge, ContentMerger::MERGE_TYPE_ENV));
   }
 
   /**
    * Tests merging of line-based files.
+   *
+   * A destination without a trailing newline is merged without losing or
+   * joining lines and gains a single trailing newline.
    */
   public function testMergeLine() {
     $original = "/vendor/\n*.log";
     $merge = "/vendor/\n/node_modules/";
-    $expected = "/vendor/\n*.log\n/node_modules/";
+    $expected = "/vendor/\n*.log\n/node_modules/\n";
+    $this->assertSame($expected, ContentMerger::mergeContents($original, $merge, ContentMerger::MERGE_TYPE_LINE));
+  }
+
+  /**
+   * Tests appending to a newline-terminated line-based file.
+   *
+   * No blank line is inserted before the appended lines and the output
+   * ends with exactly one trailing newline.
+   */
+  public function testMergeLineIntoNewlineTerminatedFile() {
+    $original = "/vendor/\n*.log\n";
+    $merge = "/vendor/\n/node_modules/";
+    $expected = "/vendor/\n*.log\n/node_modules/\n";
+    $this->assertSame($expected, ContentMerger::mergeContents($original, $merge, ContentMerger::MERGE_TYPE_LINE));
+  }
+
+  /**
+   * Tests that blank lines within a line-based file are preserved.
+   *
+   * Only the artifact around the terminal newline is removed; deliberate
+   * blank lines inside the destination survive the merge.
+   */
+  public function testMergeLinePreservesInnerBlankLines() {
+    $original = "# Dependencies\n/vendor/\n\n# Logs\n*.log\n";
+    $merge = "/node_modules/";
+    $expected = "# Dependencies\n/vendor/\n\n# Logs\n*.log\n/node_modules/\n";
+    $this->assertSame($expected, ContentMerger::mergeContents($original, $merge, ContentMerger::MERGE_TYPE_LINE));
+  }
+
+  /**
+   * Tests a line merge that only replaces existing lines.
+   *
+   * The output ends with exactly one trailing newline regardless of
+   * whether lines were appended.
+   */
+  public function testMergeLineReplaceOnlyEndsWithSingleNewline() {
+    $original = "/vendor/ export-ignore\n*.log\n";
+    $merge = "/vendor/ -diff";
+    $expected = "/vendor/ -diff\n*.log\n";
     $this->assertSame($expected, ContentMerger::mergeContents($original, $merge, ContentMerger::MERGE_TYPE_LINE));
   }
 
@@ -113,7 +171,7 @@ class ContentMergerTest extends TestCase {
   public function testMergeLineMultiColumn() {
     $original = "*.css text eol=crlf\n/vendor/ export-ignore";
     $merge = "*.css text eol=lf\n*.svg -diff";
-    $expected = "*.css text eol=lf\n/vendor/ export-ignore\n*.svg -diff";
+    $expected = "*.css text eol=lf\n/vendor/ export-ignore\n*.svg -diff\n";
     $this->assertSame($expected, ContentMerger::mergeContents($original, $merge, ContentMerger::MERGE_TYPE_LINE));
   }
 

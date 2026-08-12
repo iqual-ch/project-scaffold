@@ -77,8 +77,8 @@ class ScaffoldTest extends TestCase {
     $this->assertFileDoesNotExist($sut . '/delete-me.txt');
 
     // The 'merge' operation updates existing values and appends new ones.
-    $this->assertSame("APP_NAME=preset-project\nDEBUG=true\nPHP_VERSION=8.2", file_get_contents($sut . '/.env'));
-    $this->assertSame("/vendor/\n*.log\n/node_modules/", file_get_contents($sut . '/.gitignore'));
+    $this->assertSame("APP_NAME=preset-project\nDEBUG=true\nPHP_VERSION=8.2\n", file_get_contents($sut . '/.env'));
+    $this->assertSame("/vendor/\n*.log\n/node_modules/\n", file_get_contents($sut . '/.gitignore'));
 
     // JSON merges keep unknown keys and the original indentation.
     $expected_json = <<<JSON

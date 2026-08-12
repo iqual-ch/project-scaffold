@@ -103,9 +103,9 @@ MD;
     $this->assertFileDoesNotExist($sut . '/.claude/settings.json');
 
     // A line-based merge with multi-column lines replaces whole lines by
-    // their first column and appends new ones. Appended lines end up after
-    // the original's trailing newline, leaving a blank line in between.
-    $this->assertSame("*.css text eol=lf\n/vendor/ export-ignore\n\n*.svg -diff", file_get_contents($sut . '/.gitattributes'));
+    // their first column and appends new ones after the original's trailing
+    // newline, ending with a single trailing newline.
+    $this->assertSame("*.css text eol=lf\n/vendor/ export-ignore\n*.svg -diff\n", file_get_contents($sut . '/.gitattributes'));
 
     // A 'merge' template into a new file uses the `op.new_file` branch and
     // keeps the custom YAML tag with a scalar value.
