@@ -135,6 +135,44 @@ What variables are required and what the user should be prompted when the packag
 
 Once this example project asset package is required in the root project the user will be prompted (if in an interactive CLI) for these questions. The answers by the user will then be saved to the `extra.project-scaffold` section of the root project's `composer.json`. Once all required variables are available the assets will then be managed by the Project Scaffold Plugin according to the asset package's `assets` definition.
 
+## Multiple choice questions
+
+A question with `options` can declare `"multiple": true` to let the user select several options at once (entered comma-separated, e.g. `0,2` or `de,it`). The `default` is a JSON array of option values:
+
+```json
+{
+    "questions": {
+        "languages": {
+            "question": "Which <info>languages</info> are enabled?",
+            "options": ["de", "fr", "it", "en"],
+            "multiple": true,
+            "default": ["de"]
+        },
+        "default_language": {
+            "question": "What is the <info>default language</info>?",
+            "if": {
+                "languages": "fr"
+            },
+            "default": "fr"
+        }
+    }
+}
+```
+
+The answer is written to the root project's `composer.json` file as a JSON array and passed to the twig templates as a list:
+
+```twig
+{% if "fr" in languages %}...{% endif %}
+{% for language in languages %}{{ language }}{% endfor %}
+{{ languages|join(",") }}
+```
+
+List values behave as follows:
+
+* An `if` condition on a list variable matches when the list **contains** the value (conditions on scalar variables keep strict equality).
+* In string interpolation (e.g. `[languages]` in another question's `default`) a list is rendered comma-separated (`de,fr`).
+* When resolving variables, a list value in the root `composer.json` file **replaces** a package's default list wholesale (lists are not merged by index), so the root project can shrink or empty a list. Maps keep merging recursively with the root value winning per key.
+
 In this example an `exampleModule.php` file will be added to `app/web/module/example/exampleModule.php` once. The `add` operation will not overwrite existing files.
 Multiple folders and files will be replaced in the project root, for example a `README.md` will be created from `README.md.twig` template. The `replace` operation will always overwrite exsting files. Lastly a `.env` and `.gitignore` file will be merged into the project root. The `merge` operation will copy the original file's content if the destination doesn't exist yet, or replace the values of the variables in the destination file with the values from the source file (support for `.env`, `.gitignore`, `.json` and `.yml`).
 
