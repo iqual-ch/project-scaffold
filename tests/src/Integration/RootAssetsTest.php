@@ -151,4 +151,67 @@ class RootAssetsTest extends TestCase {
     ], $this->readScaffoldExtra($sut));
   }
 
+  /**
+   * Tests that an authored ignore-files key survives the options write-back.
+   *
+   * A run that writes options back to the composer.json file (here:
+   * allowing a newly required package) must preserve the authored
+   * `ignore-files` key verbatim, and the ignored destination must not be
+   * scaffolded by any package.
+   */
+  public function testAuthoredIgnoreFilesSurviveWriteBack() {
+    $sut = $this->fixtures->cloneFixtureProject('sut-root-assets');
+    $definition = json_decode(file_get_contents($sut . '/composer.json'), TRUE);
+    $definition['extra']['project-scaffold']['ignore-files'] = ['README.md'];
+    file_put_contents($sut . '/composer.json', json_encode($definition, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+
+    $io = $this->fixtures->io(['yes']);
+    $composer = $this->fixtures->createComposer($io, $sut);
+    $this->fixtures->installFixturePackage($composer, $sut, 'test-assets', 'iqual/test-assets');
+    $this->fixtures->installFixturePackage($composer, $sut, 'test-assets-override', 'iqual/test-assets-override');
+    $this->scaffoldWithRequiredPackage($composer, $io, 'iqual/test-assets-override');
+
+    // The ignore applies to the root package's own assets as well: neither
+    // the root package nor any asset package writes the README.md.
+    $this->assertStringContainsString('Skipping [project-root]/README.md: ignored in root project configuration', $io->getOutput());
+    $this->assertFileDoesNotExist($sut . '/README.md');
+
+    // The write-back appended the new package to `allowed-packages` and
+    // preserved the authored section, including `ignore-files`, verbatim.
+    $this->assertSame([
+      'name' => 'root-assets-project',
+      'runtime' => [
+        'php_version' => '8.2',
+      ],
+      'deployment' => 'none',
+      'allowed-packages' => [
+        'iqual/test-assets',
+        'iqual/test-assets-override',
+      ],
+      'assets' => [
+        'replace' => 'root-assets/replace',
+      ],
+      'ignore-files' => [
+        'README.md',
+      ],
+    ], $this->readScaffoldExtra($sut));
+  }
+
+  /**
+   * Tests that the write-back never materializes a default ignore-files key.
+   */
+  public function testWriteBackDoesNotMaterializeIgnoreFiles() {
+    $sut = $this->fixtures->cloneFixtureProject('sut-root-assets');
+    $io = $this->fixtures->io(['yes']);
+    $composer = $this->fixtures->createComposer($io, $sut);
+    $this->fixtures->installFixturePackage($composer, $sut, 'test-assets', 'iqual/test-assets');
+    $this->fixtures->installFixturePackage($composer, $sut, 'test-assets-override', 'iqual/test-assets-override');
+    $this->scaffoldWithRequiredPackage($composer, $io, 'iqual/test-assets-override');
+
+    // The run wrote the options back (new allowed package), but the unused
+    // `ignore-files` default was not written into the composer.json file.
+    $this->assertContains('iqual/test-assets-override', $this->readScaffoldExtra($sut)['allowed-packages']);
+    $this->assertArrayNotHasKey('ignore-files', $this->readScaffoldExtra($sut));
+  }
+
 }

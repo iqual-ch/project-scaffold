@@ -195,8 +195,9 @@ class Handler {
     $scaffold_package_options = $this->getOptionsFromPackages($allowed_packages, $modified_packages, $override_prompt);
 
     // Create a collection of scaffolded files to process. This determines which
-    // take priority and which are combined.
-    $scaffold_files = new ScaffoldFileCollection($assets, $location_replacements);
+    // take priority and which are combined. Destinations matching the root
+    // package's `ignore-files` patterns are never scaffolded.
+    $scaffold_files = new ScaffoldFileCollection($assets, $location_replacements, $scaffold_options->ignoreFiles());
 
     // Get the scaffold files whose contents on disk match what we are about to
     // write. These files are converted to a skip operation.

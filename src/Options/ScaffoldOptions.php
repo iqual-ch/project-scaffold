@@ -65,6 +65,7 @@ class ScaffoldOptions {
       "allowed-packages" => [],
       "locations" => [],
       "assets" => [],
+      "ignore-files" => [],
     ];
 
     // Default locations.
@@ -192,6 +193,22 @@ class ScaffoldOptions {
    */
   public function assets() {
     return $this->options['assets'];
+  }
+
+  /**
+   * Gets the list of destination paths that must never be scaffolded.
+   *
+   * Only evaluated for the root package: the root project may declare
+   * destination paths (with fnmatch-style glob support) that no package
+   * is allowed to scaffold. Like the other defaults, the empty default
+   * value is never written back to the composer.json file.
+   *
+   * @return string[]
+   *   The list of ignored destination paths or patterns.
+   */
+  public function ignoreFiles() {
+    $ignore_files = $this->options['ignore-files'];
+    return is_array($ignore_files) ? $ignore_files : [];
   }
 
   /**

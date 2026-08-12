@@ -139,3 +139,33 @@ In this example an `exampleModule.php` file will be added to `app/web/module/exa
 Multiple folders and files will be replaced in the project root, for example a `README.md` will be created from `README.md.twig` template. The `replace` operation will always overwrite exsting files. Lastly a `.env` and `.gitignore` file will be merged into the project root. The `merge` operation will copy the original file's content if the destination doesn't exist yet, or replace the values of the variables in the destination file with the values from the source file (support for `.env`, `.gitignore`, `.json` and `.yml`).
 
 If the asset package is updated and a new version is released, then the update will be applied to the managed files in the project once the project (or only the required package) is updated (i.e. using `composer update`).
+
+## Ignoring files in the root project
+
+The root project can declare destination paths that must never be scaffolded, no matter which asset package provides them. This is useful when a project wants to maintain individual files (e.g. its `README.md`) by hand while still receiving all other managed assets:
+
+```json
+{
+  "extra": {
+    "project-scaffold": {
+      "ignore-files": [
+        "README.md",
+        "web/*.txt",
+        ".github/**"
+      ]
+    }
+  }
+}
+```
+
+Matched files are reported as skipped during scaffolding:
+
+```
+- Skipping [project-root]/README.md: ignored in root project configuration
+```
+
+Matching rules:
+
+* `ignore-files` is only read from the root project's `composer.json`. An `ignore-files` entry in an asset package has no effect (asset packages can disable their own asset locations with `"<location>": false` instead).
+* Patterns are matched against the destination path relative to the project root — the path of the file on disk, as also shown in the scaffolding log output. Templated sources are matched without their `.twig` suffix: to ignore a file scaffolded from `README.md.twig`, write `README.md`.
+* Patterns use PHP's [`fnmatch()`](https://www.php.net/fnmatch) without `FNM_PATHNAME`: `*` and `?` also match directory separators. `web/*.txt` therefore matches `web/robots.txt` **and** nested paths such as `web/sub/notes.txt`, and `.github/**` matches everything below `.github/`.

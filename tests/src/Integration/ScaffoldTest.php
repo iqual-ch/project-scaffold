@@ -332,6 +332,103 @@ JSON;
   }
 
   /**
+   * Tests that root-level ignore-files prevents scaffolding of exact paths.
+   *
+   * The destinations are authored as plain relative paths ("Makefile") and
+   * match templated sources by their destination name without the `.twig`
+   * suffix ("README.md" ignores the file rendered from `README.md.twig`).
+   */
+  public function testIgnoreFilesSkipsExactDestinations() {
+    $sut = $this->fixtures->cloneFixtureProject('sut-preset');
+    $definition = json_decode(file_get_contents($sut . '/composer.json'), TRUE);
+    $definition['extra']['project-scaffold']['ignore-files'] = ['README.md', 'Makefile'];
+    file_put_contents($sut . '/composer.json', json_encode($definition, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+
+    $io = $this->fixtures->io();
+    $composer = $this->fixtures->createComposer($io, $sut);
+    $this->fixtures->installFixturePackage($composer, $sut, 'test-assets', 'iqual/test-assets');
+    $this->fixtures->runScaffold($composer, $io);
+    $output = $io->getOutput();
+
+    // The ignored destinations are logged as skipped and never written.
+    $this->assertStringContainsString('Skipping [project-root]/README.md: ignored in root project configuration', $output);
+    $this->assertStringContainsString('Skipping [project-root]/Makefile: ignored in root project configuration', $output);
+    $this->assertFileDoesNotExist($sut . '/README.md');
+    $this->assertFileDoesNotExist($sut . '/Makefile');
+
+    // All other assets scaffold normally.
+    $this->assertFileExists($sut . '/settings.php');
+    $this->assertSame("APP_NAME=preset-project\nDEBUG=true\nPHP_VERSION=8.2\n", file_get_contents($sut . '/.env'));
+
+    // A second run behaves the same: the ignored destinations do not
+    // participate in the unchanged-check and stay ignored.
+    $second_io = $this->fixtures->io();
+    $composer = $this->fixtures->createComposer($second_io, $sut);
+    $this->fixtures->installFixturePackage($composer, $sut, 'test-assets', 'iqual/test-assets');
+    $this->fixtures->runScaffold($composer, $second_io);
+
+    $this->assertStringContainsString('Skipping [project-root]/README.md: ignored in root project configuration', $second_io->getOutput());
+    $this->assertFileDoesNotExist($sut . '/README.md');
+    $this->assertFileDoesNotExist($sut . '/Makefile');
+  }
+
+  /**
+   * Tests that ignore-files glob patterns also match nested destinations.
+   *
+   * Patterns are matched with fnmatch() without FNM_PATHNAME, so `*`
+   * crosses directory separators: `app/*.php` matches the destination
+   * `app/web/index.php` ([web-root]/index.php with web-root at app/web).
+   */
+  public function testIgnoreFilesGlobMatchesNestedDestinations() {
+    $sut = $this->fixtures->cloneFixtureProject('sut-preset');
+    $definition = json_decode(file_get_contents($sut . '/composer.json'), TRUE);
+    $definition['extra']['project-scaffold']['ignore-files'] = ['app/*.php'];
+    file_put_contents($sut . '/composer.json', json_encode($definition, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+
+    $io = $this->fixtures->io();
+    $composer = $this->fixtures->createComposer($io, $sut);
+    $this->fixtures->installFixturePackage($composer, $sut, 'test-assets', 'iqual/test-assets');
+    $this->fixtures->runScaffold($composer, $io);
+    $output = $io->getOutput();
+
+    // The nested destination is ignored and the existing file untouched.
+    $this->assertStringContainsString('Skipping [web-root]/index.php: ignored in root project configuration', $output);
+    $this->assertStringContainsString('Original index.', file_get_contents($sut . '/app/web/index.php'));
+
+    // Destinations outside the pattern scaffold normally, including other
+    // .php files that do not live under app/.
+    $this->assertFileExists($sut . '/settings.php');
+    $this->assertSame("# preset-project\n\nProject running on PHP 8.2.\n", file_get_contents($sut . '/README.md'));
+  }
+
+  /**
+   * Tests that an ignored destination is never written by any package.
+   *
+   * The ignore matching runs after the override collision resolution, so
+   * when several packages target the same ignored destination, the losing
+   * operations keep their "overridden" skip and the winning operation is
+   * converted to an "ignored" skip: nobody writes the file.
+   */
+  public function testIgnoredDestinationIsNeverWrittenByAnyPackage() {
+    $sut = $this->fixtures->cloneFixtureProject('sut-preset');
+    $definition = json_decode(file_get_contents($sut . '/composer.json'), TRUE);
+    $definition['extra']['project-scaffold']['allowed-packages'][] = 'iqual/test-assets-override';
+    $definition['extra']['project-scaffold']['ignore-files'] = ['README.md'];
+    file_put_contents($sut . '/composer.json', json_encode($definition, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+
+    $io = $this->fixtures->io();
+    $composer = $this->fixtures->createComposer($io, $sut);
+    $this->fixtures->installFixturePackage($composer, $sut, 'test-assets', 'iqual/test-assets');
+    $this->fixtures->installFixturePackage($composer, $sut, 'test-assets-override', 'iqual/test-assets-override');
+    $this->fixtures->runScaffold($composer, $io);
+    $output = $io->getOutput();
+
+    $this->assertStringContainsString('overridden in iqual/test-assets-override', $output);
+    $this->assertStringContainsString('Skipping [project-root]/README.md: ignored in root project configuration', $output);
+    $this->assertFileDoesNotExist($sut . '/README.md');
+  }
+
+  /**
    * Tests that nothing is scaffolded without allowed packages.
    */
   public function testScaffoldWithoutAllowedPackages() {

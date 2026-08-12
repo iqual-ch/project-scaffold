@@ -17,6 +17,8 @@ An asset package declares its files under `extra.project-scaffold.assets`, group
 
 Sources ending in `.twig` are rendered with the project's variables before being placed. See [creating a project asset package](./docs/asset-package.md) for the full format.
 
+The root project stays in control: destination paths listed under `extra.project-scaffold.ignore-files` (glob patterns allowed) are never scaffolded, no matter which package provides them.
+
 ## Getting started
 
 ```bash

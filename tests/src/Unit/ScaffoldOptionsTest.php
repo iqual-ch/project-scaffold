@@ -106,6 +106,31 @@ class ScaffoldOptionsTest extends TestCase {
   }
 
   /**
+   * Tests the ignore-files option accessor.
+   */
+  public function testIgnoreFiles() {
+    // The option defaults to an empty list.
+    $options = ScaffoldOptions::create([], FALSE, 'test/package');
+    $this->assertSame([], $options->ignoreFiles());
+
+    // Authored patterns are returned as-is.
+    $options = ScaffoldOptions::create([
+      'project-scaffold' => [
+        'ignore-files' => ['README.md', 'web/*.txt'],
+      ],
+    ], FALSE, 'test/package');
+    $this->assertSame(['README.md', 'web/*.txt'], $options->ignoreFiles());
+
+    // A malformed (non-array) value is treated as no ignores.
+    $options = ScaffoldOptions::create([
+      'project-scaffold' => [
+        'ignore-files' => 'README.md',
+      ],
+    ], FALSE, 'test/package');
+    $this->assertSame([], $options->ignoreFiles());
+  }
+
+  /**
    * Tests that unknown options return NULL.
    */
   public function testGetMissingOptionReturnsNull() {

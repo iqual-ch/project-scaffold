@@ -32,8 +32,12 @@ class ScaffoldFileCollection implements \IteratorAggregate {
    *   A multidimensional array of file mappings.
    * @param \iqual\Composer\ProjectScaffold\Interpolator $location_replacements
    *   An object with the location mappings (e.g. [web-root]).
+   * @param string[] $ignore_files
+   *   List of destination paths (relative to the project root, fnmatch-style
+   *   globs allowed) declared in the root package that must not be
+   *   scaffolded.
    */
-  public function __construct(array $file_mappings, Interpolator $location_replacements) {
+  public function __construct(array $file_mappings, Interpolator $location_replacements, array $ignore_files = []) {
     // Collection of all destination paths to be scaffolded. Used to determine
     // when two projects scaffold the same file and we have to either replace or
     // combine them together.
@@ -107,6 +111,57 @@ class ScaffoldFileCollection implements \IteratorAggregate {
         $scaffold_file = new ScaffoldFileInfo($destination, $op);
         $scaffoldFiles[$destination_rel_path] = $scaffold_file;
         $this->scaffoldFilesByProject[$package_name][$destination_rel_path] = $scaffold_file;
+      }
+    }
+
+    // Convert operations that target an ignored destination into skip
+    // operations. This runs after the override collision handling above, so
+    // that an ignored destination is never written by any package,
+    // regardless of which package won the collision.
+    if ($ignore_files !== []) {
+      $this->ignoreFiles($ignore_files, $location_replacements);
+    }
+  }
+
+  /**
+   * Converts operations matching an ignored destination to skip operations.
+   *
+   * The patterns are matched against the destination path relative to the
+   * project root (the path the file would have on disk, without a `.twig`
+   * suffix for templated sources), using fnmatch() without FNM_PATHNAME:
+   * `*` and `?` also match directory separators, so `web/*.txt` matches
+   * nested paths like `web/sub/file.txt` as well.
+   *
+   * @param string[] $ignore_files
+   *   List of ignored destination paths or fnmatch-style glob patterns.
+   * @param \iqual\Composer\ProjectScaffold\Interpolator $location_replacements
+   *   An object with the location mappings (e.g. [web-root]).
+   */
+  protected function ignoreFiles(array $ignore_files, Interpolator $location_replacements) {
+    $project_root = $location_replacements->interpolate('[project-root]');
+    foreach ($this->scaffoldFilesByProject as $package_name => $scaffold_files) {
+      foreach ($scaffold_files as $destination_rel_path => $scaffold_file) {
+        // 'read' operations have no destination file and skip operations
+        // (declared skips, collision losers) never write anyway.
+        if ($destination_rel_path === "read" || $scaffold_file->op() instanceof SkipOperation) {
+          continue;
+        }
+        // Match against the destination path as it appears on disk,
+        // relative to the project root.
+        $relative_destination = $scaffold_file->destination()->fullPath();
+        if (str_starts_with($relative_destination, $project_root . '/')) {
+          $relative_destination = substr($relative_destination, strlen($project_root) + 1);
+        }
+        foreach ($ignore_files as $pattern) {
+          if (!is_string($pattern)) {
+            continue;
+          }
+          if ($pattern === $relative_destination || fnmatch($pattern, $relative_destination)) {
+            $message = "  - Skipping <info>[dest-rel-path]</info>: ignored in root project configuration";
+            $this->scaffoldFilesByProject[$package_name][$destination_rel_path] = new ScaffoldFileInfo($scaffold_file->destination(), new SkipOperation($message));
+            break;
+          }
+        }
       }
     }
   }
