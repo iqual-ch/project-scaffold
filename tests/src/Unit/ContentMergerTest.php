@@ -49,6 +49,15 @@ class ContentMergerTest extends TestCase {
   }
 
   /**
+   * Tests that merging with an unknown merge type is rejected.
+   */
+  public function testMergeContentsUnknownTypeThrows() {
+    $this->expectException(\RuntimeException::class);
+    $this->expectExceptionMessage('Unknown merge type <comment>unknown</comment>');
+    ContentMerger::mergeContents("APP_NAME=old", "APP_NAME=new", 'unknown');
+  }
+
+  /**
    * Tests that an empty merge source returns the original contents.
    */
   public function testEmptyMergeContentsReturnsOriginal() {

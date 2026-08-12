@@ -120,7 +120,10 @@ class ContentMerger {
         return $original_contents;
       }
     }
-
+    // Fail on unknown merge types.
+    else {
+      throw new \RuntimeException("Could not merge file. Unknown merge type <comment>{$type}</comment>.");
+    }
   }
 
   /**
