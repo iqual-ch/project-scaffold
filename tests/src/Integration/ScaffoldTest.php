@@ -135,6 +135,28 @@ JSON;
   }
 
   /**
+   * Tests that the scaffold command hooks reach the composer script listeners.
+   */
+  public function testScaffoldCommandHooksAreDispatched() {
+    $sut = $this->fixtures->cloneFixtureProject('sut-preset');
+    $definition = json_decode(file_get_contents($sut . '/composer.json'), TRUE);
+    $definition['scripts'] = [
+      'pre-project-scaffold-cmd' => 'iqual\\Composer\\ProjectScaffold\\Tests\\Integration\\ScaffoldHooks::hook',
+      'post-project-scaffold-cmd' => 'iqual\\Composer\\ProjectScaffold\\Tests\\Integration\\ScaffoldHooks::hook',
+    ];
+    file_put_contents($sut . '/composer.json', json_encode($definition, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+
+    $io = $this->fixtures->io();
+    $composer = $this->fixtures->createComposer($io, $sut);
+    $this->fixtures->installFixturePackage($composer, $sut, 'test-assets', 'iqual/test-assets');
+    $this->fixtures->runScaffold($composer, $io);
+    $output = $io->getOutput();
+
+    $this->assertStringContainsString('pre-project-scaffold-cmd hook for fixtures/sut-preset', $output);
+    $this->assertStringContainsString('post-project-scaffold-cmd hook for fixtures/sut-preset', $output);
+  }
+
+  /**
    * Tests that nothing is scaffolded without allowed packages.
    */
   public function testScaffoldWithoutAllowedPackages() {
