@@ -53,7 +53,7 @@ class ContentMerger {
       $merge_type = self::MERGE_TYPE_ENV;
     }
     // Detect line-separated files, e.g. .gitignore.
-    elseif (preg_match('/^\.((git|docker)ignore|gitattributes)(\.twig)?$/', $file_path)) {
+    elseif (preg_match('/^\.((git|docker)ignore|gitattributes)(\.twig)?$/', basename($file_path))) {
       $merge_type = self::MERGE_TYPE_LINE;
     }
     // Detect JSON files.

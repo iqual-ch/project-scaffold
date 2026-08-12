@@ -33,6 +33,10 @@ class ContentMergerTest extends TestCase {
       ['.gitignore.twig', ContentMerger::MERGE_TYPE_LINE],
       ['.dockerignore', ContentMerger::MERGE_TYPE_LINE],
       ['.gitattributes', ContentMerger::MERGE_TYPE_LINE],
+      ['app/.gitignore', ContentMerger::MERGE_TYPE_LINE],
+      ['app/.gitignore.twig', ContentMerger::MERGE_TYPE_LINE],
+      ['docker/.dockerignore', ContentMerger::MERGE_TYPE_LINE],
+      ['app/.gitattributes', ContentMerger::MERGE_TYPE_LINE],
       ['config.json', ContentMerger::MERGE_TYPE_JSON],
       ['config.json.twig', ContentMerger::MERGE_TYPE_JSON],
       ['services.yml', ContentMerger::MERGE_TYPE_YAML],
@@ -46,6 +50,14 @@ class ContentMergerTest extends TestCase {
   public function testDetectMergeTypeUnknownThrows() {
     $this->expectException(\RuntimeException::class);
     ContentMerger::detectMergeType('unknown.txt');
+  }
+
+  /**
+   * Tests that nested unknown file types are rejected.
+   */
+  public function testDetectMergeTypeNestedUnknownThrows() {
+    $this->expectException(\RuntimeException::class);
+    ContentMerger::detectMergeType('app/foo.txt');
   }
 
   /**
