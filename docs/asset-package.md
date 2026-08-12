@@ -12,7 +12,7 @@ Example root project `composer.json`:
     /* your required packages */
   },
   "require-dev": {
-    "iqual/project-scaffold": "^1.0",
+    "iqual/project-scaffold": "^2.0",
     "iqual/example-project-assets": "^1.0"
   },
   "config": {
@@ -29,7 +29,7 @@ Example root project `composer.json`:
         "web-root": "web"
       },
       "allowed-packages": ["iqual/example-project-assets"]
-    },
+    }
   }
 }
 
@@ -83,10 +83,10 @@ An example `composer.json` of the project asset package:
         "project-scaffold": {
             "runtime": {
                 "php_version": 8.1,
-                "db_version": 10.6,
+                "db_version": 10.6
             },
             "workflows": {
-                "testing": true,
+                "testing": true
             },
             "assets": {
                 "add": "assets/add",
