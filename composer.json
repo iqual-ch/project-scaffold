@@ -15,7 +15,7 @@
     "php": "^8.3",
     "composer-plugin-api": "^2.0",
     "symfony/yaml": "^6.4 || ^7.0",
-    "twig/twig": "^3.0"
+    "twig/twig": "^3.9.3"
   },
   "autoload": {
     "psr-4": {
