@@ -102,19 +102,6 @@ class ScaffoldOptions {
   }
 
   /**
-   * Creates a new scaffold options object with some values overridden.
-   *
-   * @param array $options
-   *   Override values.
-   *
-   * @return self
-   *   The scaffold options object representing the provided scaffold options
-   */
-  protected function override(array $options) {
-    return new self($options + $this->options);
-  }
-
-  /**
    * Determines whether any allowed packages were defined.
    *
    * @return bool

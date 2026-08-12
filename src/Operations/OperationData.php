@@ -49,16 +49,6 @@ class OperationData {
   }
 
   /**
-   * Gets the destination path that this destination data is associated with.
-   *
-   * @return string
-   *   The destination path for the scaffold result.
-   */
-  public function destination() {
-    return $this->destination;
-  }
-
-  /**
    * Gets the operation path that this operation data is associated with.
    *
    * @return string
