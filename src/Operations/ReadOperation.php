@@ -113,8 +113,15 @@ class ReadOperation extends AbstractOperation {
 
           // If the condition doesn't match, continue.
           if (in_array($conditional_variable, $scaffold_variable_keys)) {
-            $current_value = $interpolator->interpolate($this->getScaffoldVariable($conditional_variable, $scaffold_variables));
-            if ($current_value !== $conditional_value) {
+            $current_value = $this->getScaffoldVariable($conditional_variable, $scaffold_variables);
+            // A list value (e.g. a multiple choice answer) matches the
+            // condition when it contains the value.
+            if (is_array($current_value)) {
+              if (!in_array($conditional_value, $current_value, TRUE)) {
+                continue;
+              }
+            }
+            elseif ($interpolator->interpolate($current_value) !== $conditional_value) {
               continue;
             }
           }
@@ -126,14 +133,26 @@ class ReadOperation extends AbstractOperation {
         $value = "";
         // If a default was defined set the value to it.
         if (array_key_exists("default", $definition)) {
-          $value = $interpolator->interpolate($definition["default"]);
+          // A multiple choice default is a list of values.
+          if (is_array($definition["default"])) {
+            $value = [];
+            foreach ($definition["default"] as $default_value) {
+              $value[] = $interpolator->interpolate($default_value);
+            }
+          }
+          else {
+            $value = $interpolator->interpolate($definition["default"]);
+          }
         }
         // If value already exists in the scaffold variables set it to it.
         if (in_array($variable, $scaffold_variable_keys)) {
-          $value = $interpolator->interpolate($this->getScaffoldVariable($variable, $scaffold_variables));
+          $value = $this->getScaffoldVariable($variable, $scaffold_variables);
+          if (!is_array($value)) {
+            $value = $interpolator->interpolate($value);
+          }
         }
         // If a filter is defined, filter the current value.
-        if (array_key_exists("filter", $definition)) {
+        if (array_key_exists("filter", $definition) && is_string($value)) {
           $filter_array = preg_split('~(?<!\\\)\/~', $definition["filter"]);
           if (!empty($filter_array) && count($filter_array) == 4) {
             $pattern = $filter_array[1];
@@ -199,6 +218,11 @@ class ReadOperation extends AbstractOperation {
     foreach ($scaffold_variables as $variable_key => $scaffold_variable) {
       // If variable is an array process array.
       if (is_array($scaffold_variable)) {
+        // Return the parent key for an empty (list) value, so that a
+        // stored empty answer is not treated as a missing variable.
+        if ($scaffold_variable === []) {
+          $scaffold_variable_keys[] = $variable_key;
+        }
         foreach ($scaffold_variable as $variable_subkey => $scaffold_subvariable) {
           // Only support nesting two-levels deep.
           if (!is_array($scaffold_subvariable)) {
@@ -231,13 +255,13 @@ class ReadOperation extends AbstractOperation {
    * @param array $scaffold_variables
    *   The current scaffold variables.
    *
-   * @return string
-   *   The value of the variable.
+   * @return mixed
+   *   The value of the variable, or NULL if it is not set.
    */
   protected function getScaffoldVariable(string $variable, array $scaffold_variables) {
     // Check for dot-noation in variable.
     if (strpos($variable, ".") === FALSE) {
-      if (array_key_exists($variable, $scaffold_variables) && !is_array($scaffold_variables[$variable])) {
+      if (array_key_exists($variable, $scaffold_variables)) {
         return $scaffold_variables[$variable];
       }
     }
@@ -250,7 +274,7 @@ class ReadOperation extends AbstractOperation {
         // Return nested data.
         if (array_key_exists($split_variable[0], $scaffold_variables)) {
           $data = $scaffold_variables[$split_variable[0]];
-          if (array_key_exists($split_variable[1], $data) && !is_array($data[$split_variable[1]])) {
+          if (is_array($data) && array_key_exists($split_variable[1], $data)) {
             return $data[$split_variable[1]];
           }
         }
@@ -265,7 +289,7 @@ class ReadOperation extends AbstractOperation {
    *
    * @param string $variable
    *   The variable to set in the options.
-   * @param string $value
+   * @param string|array $value
    *   The value to set the variable to.
    * @param \iqual\Composer\ProjectScaffold\Options\ScaffoldOptions $options
    *   The current scaffold options.
@@ -274,7 +298,7 @@ class ReadOperation extends AbstractOperation {
    * @param array $scaffold_variables
    *   The current scaffold variables.
    */
-  protected function setOptionVariable(string $variable, string $value, ScaffoldOptions $options, Interpolator $interpolator, array &$scaffold_variables) {
+  protected function setOptionVariable(string $variable, string|array $value, ScaffoldOptions $options, Interpolator $interpolator, array &$scaffold_variables) {
     // Check for dot-noation in variable.
     if (strpos($variable, ".") === FALSE) {
       $options->setOption($variable, $value);
@@ -320,8 +344,23 @@ class ReadOperation extends AbstractOperation {
    *   Result of the user prompt.
    */
   protected function promptQuestions(IOInterface $io, array $definition = [], $default = "") {
+    // A multiple choice default is a list; represent it as a
+    // comma-separated string for display and for the select prompt.
+    if (is_array($default)) {
+      $default = implode(",", $default);
+    }
     $default_text = \strval($default) ? " [<comment>" . \strval($default) . "</comment>]" : "";
     if (array_key_exists("options", $definition)) {
+      // If multiple choices are allowed, the selection is a list of
+      // keys of the chosen options.
+      if (!empty($definition["multiple"])) {
+        $selection = $io->select($definition["question"] . $default_text . ":", $definition["options"], \strval($default) !== "" ? $default : NULL, FALSE, 'Value "%s" is invalid', TRUE);
+        $values = [];
+        foreach ($selection as $selected) {
+          $values[] = $definition["options"][$selected];
+        }
+        return $values;
+      }
       $selection = $io->select($definition["question"] . $default_text . ":", $definition["options"], $default);
       return $definition["options"][$selection];
     }

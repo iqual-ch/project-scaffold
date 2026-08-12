@@ -31,6 +31,29 @@
                 "deployment": "kubernetes"
             },
             "default": "k8s.example.com"
+        },
+        "languages": {
+            "question": "Which <info>languages</info> are enabled?",
+            "if": {
+                "multilingual": "yes"
+            },
+            "options": [
+                "de",
+                "fr",
+                "it",
+                "en"
+            ],
+            "multiple": true,
+            "default": [
+                "de"
+            ]
+        },
+        "default_language": {
+            "question": "What is the <info>default language</info>?",
+            "if": {
+                "languages": "fr"
+            },
+            "default": "fr"
         }
     }
 }

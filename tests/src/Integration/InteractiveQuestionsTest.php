@@ -187,6 +187,74 @@ class InteractiveQuestionsTest extends TestCase {
   }
 
   /**
+   * Tests that a multiple choice answer survives the full round-trip.
+   */
+  public function testMultipleChoiceQuestionRoundTrip() {
+    $sut = $this->fixtures->cloneFixtureProject('sut-questions');
+    // Enable the conditional languages question.
+    $definition = json_decode(file_get_contents($sut . '/composer.json'), TRUE);
+    $definition['extra']['project-scaffold']['multilingual'] = 'yes';
+    file_put_contents($sut . '/composer.json', json_encode($definition, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+
+    // Answers: project name, PHP version (empty = default 8.2),
+    // deployment (option 0 = none), languages (options 1 and 3 = fr and
+    // en), default language (empty = default, asked because the answer
+    // contains fr).
+    $io = $this->fixtures->io(['my-project', '', '0', '1,3', '']);
+    $composer = $this->fixtures->createComposer($io, $sut);
+    $this->fixtures->installFixturePackage($composer, $sut, 'test-assets', 'iqual/test-assets');
+    $this->fixtures->runScaffold($composer, $io);
+    $output = $io->getOutput();
+
+    $this->assertStringContainsString('Which languages are enabled?', $output);
+    $this->assertStringContainsString('What is the default language?', $output);
+
+    // The answer is written to the composer.json file as a list and
+    // rendered as a list in the templates.
+    $extra = $this->readScaffoldExtra($sut);
+    $this->assertSame(['fr', 'en'], $extra['languages']);
+    $this->assertSame('fr', $extra['default_language']);
+    $readme = "# my-project\n\nProject running on PHP 8.2.\nLanguages: fr, en.\n";
+    $this->assertSame($readme, file_get_contents($sut . '/README.md'));
+
+    // A second, non-interactive run re-reads the stored answer without
+    // clobbering it.
+    $io = $this->fixtures->io();
+    $composer = $this->fixtures->createComposer($io, $sut);
+    $this->fixtures->installFixturePackage($composer, $sut, 'test-assets', 'iqual/test-assets');
+    $this->fixtures->runScaffold($composer, $io);
+
+    $extra = $this->readScaffoldExtra($sut);
+    $this->assertSame(['fr', 'en'], $extra['languages']);
+    $this->assertSame($readme, file_get_contents($sut . '/README.md'));
+  }
+
+  /**
+   * Tests that a multiple choice default is used non-interactively.
+   */
+  public function testMultipleChoiceDefaultIsUsedWhenNotInteractive() {
+    $sut = $this->fixtures->cloneFixtureProject('sut-questions');
+    // Enable the conditional languages question and preset the variable
+    // that has neither a default nor a value.
+    $definition = json_decode(file_get_contents($sut . '/composer.json'), TRUE);
+    $definition['extra']['project-scaffold']['multilingual'] = 'yes';
+    $definition['extra']['project-scaffold']['deployment'] = 'none';
+    file_put_contents($sut . '/composer.json', json_encode($definition, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+
+    $io = $this->fixtures->io();
+    $composer = $this->fixtures->createComposer($io, $sut);
+    $this->fixtures->installFixturePackage($composer, $sut, 'test-assets', 'iqual/test-assets');
+    $this->fixtures->runScaffold($composer, $io, TRUE);
+
+    // The languages question falls back to its list default and the
+    // dependent default language question is skipped (no "fr" selected).
+    $extra = $this->readScaffoldExtra($sut);
+    $this->assertSame(['de'], $extra['languages']);
+    $this->assertArrayNotHasKey('default_language', $extra);
+    $this->assertStringContainsString("Languages: de.\n", file_get_contents($sut . '/README.md'));
+  }
+
+  /**
    * Tests that the init operation prompts even with preset variables.
    */
   public function testInitAlwaysPrompts() {

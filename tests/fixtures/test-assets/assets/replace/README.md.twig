@@ -1,3 +1,6 @@
 # {{ name }}
 
 Project running on PHP {{ runtime.php_version }}.
+{% if languages is defined %}
+Languages: {{ languages|join(", ") }}.
+{% endif %}
