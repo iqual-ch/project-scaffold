@@ -99,6 +99,7 @@ class ReadOperation extends AbstractOperation {
     if ($prompt && array_key_exists("questions", $scaffold_questions)) {
       $io->write("Configure <comment>{$package_name}</comment>:", TRUE, 2);
 
+      $missing_variables = [];
       foreach ($scaffold_questions["questions"] as $variable => $definition) {
         // Sanitize variable name if there are multiples,
         // e.g. `example[0]` to `example`.
@@ -145,11 +146,25 @@ class ReadOperation extends AbstractOperation {
         if (array_key_exists("question", $definition) && $io->isInteractive()) {
           $value = $this->promptQuestions($io, $definition, $value);
         }
+        // When running non-interactively, a question without a default
+        // value and without a pre-existing value cannot be answered.
+        // Collect it instead of silently writing an empty answer.
+        elseif (!$io->isInteractive() && !array_key_exists("default", $definition) && !in_array($variable, $scaffold_variable_keys)) {
+          $missing_variables[] = $variable;
+          continue;
+        }
 
         // Set the new option variables.
         $this->setOptionVariable($variable, $value, $options, $interpolator, $scaffold_variables);
         // Update the list of keys.
         $scaffold_variable_keys = $this->getFlatScaffoldVariableKeys($scaffold_variables);
+      }
+
+      // Fail if any questions could not be answered non-interactively,
+      // instead of writing empty answers to the composer.json file.
+      if (!empty($missing_variables)) {
+        $missing_list = '"' . implode('", "', array_unique($missing_variables)) . '"';
+        throw new \RuntimeException("Cannot answer the questions of {$package_name} in non-interactive mode: no value for {$missing_list}. Add a default to the question, set the variable in the 'extra.project-scaffold' section of the root composer.json, or run the command interactively.");
       }
     }
 

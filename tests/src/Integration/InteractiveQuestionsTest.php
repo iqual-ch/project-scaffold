@@ -54,6 +54,59 @@ class InteractiveQuestionsTest extends TestCase {
   }
 
   /**
+   * Tests that unanswerable questions fail a non-interactive run.
+   *
+   * When the init operation runs non-interactively, a question without a
+   * default value and without a pre-existing value in the root
+   * composer.json must fail the run naming the variable, instead of
+   * silently writing an empty answer.
+   */
+  public function testMissingDefaultsFailWhenNotInteractive() {
+    $sut = $this->fixtures->cloneFixtureProject('sut-questions');
+    $composer_json = file_get_contents($sut . '/composer.json');
+    $io = $this->fixtures->io();
+    $composer = $this->fixtures->createComposer($io, $sut);
+    $this->fixtures->installFixturePackage($composer, $sut, 'test-assets', 'iqual/test-assets');
+
+    try {
+      $this->fixtures->runScaffold($composer, $io, TRUE);
+      $this->fail('The non-interactive init run should have failed.');
+    }
+    catch (\RuntimeException $exception) {
+      $this->assertSame('Cannot answer the questions of iqual/test-assets in non-interactive mode: no value for "deployment". Add a default to the question, set the variable in the \'extra.project-scaffold\' section of the root composer.json, or run the command interactively.', $exception->getMessage());
+    }
+
+    // No (empty) answers were written to the composer.json file.
+    $this->assertSame($composer_json, file_get_contents($sut . '/composer.json'));
+  }
+
+  /**
+   * Tests that defaults and preset values are used non-interactively.
+   */
+  public function testDefaultsAreUsedWhenNotInteractive() {
+    $sut = $this->fixtures->cloneFixtureProject('sut-questions');
+    // Preset the only variable that has neither a default nor a value.
+    $definition = json_decode(file_get_contents($sut . '/composer.json'), TRUE);
+    $definition['extra']['project-scaffold']['deployment'] = 'none';
+    file_put_contents($sut . '/composer.json', json_encode($definition, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+
+    $io = $this->fixtures->io();
+    $composer = $this->fixtures->createComposer($io, $sut);
+    $this->fixtures->installFixturePackage($composer, $sut, 'test-assets', 'iqual/test-assets');
+    $this->fixtures->runScaffold($composer, $io, TRUE);
+
+    // The name question falls back to its (filtered) default, the PHP
+    // version comes from the asset package's preset variables and the
+    // conditional cluster question is skipped.
+    $extra = $this->readScaffoldExtra($sut);
+    $this->assertSame('sut-questions', $extra['name']);
+    $this->assertSame('8.2', $extra['runtime']['php_version']);
+    $this->assertSame('none', $extra['deployment']);
+    $this->assertArrayNotHasKey('cluster', $extra);
+    $this->assertSame("# sut-questions\n\nProject running on PHP 8.2.\n", file_get_contents($sut . '/README.md'));
+  }
+
+  /**
    * Tests that missing required variables are prompted interactively.
    */
   public function testQuestionsAreAskedForMissingVariables() {
