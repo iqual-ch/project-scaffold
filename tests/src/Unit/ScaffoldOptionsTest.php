@@ -83,6 +83,29 @@ class ScaffoldOptionsTest extends TestCase {
   }
 
   /**
+   * Tests that only genuinely changed options are reported as modified.
+   */
+  public function testGetModifiedOptions() {
+    $options = ScaffoldOptions::create([
+      'project-scaffold' => ['name' => 'example'],
+    ], FALSE, 'test/package');
+    $this->assertSame([], $options->getModifiedOptions());
+
+    // Setting an option to its current value is not a modification.
+    $options->setOption('name', 'example');
+    $this->assertSame([], $options->getModifiedOptions());
+
+    // Changed and newly added options are reported with their current
+    // values, untouched options (including the defaults) are not.
+    $options->setOption('name', 'changed');
+    $options->setOption('deployment', 'none');
+    $this->assertSame([
+      'name' => 'changed',
+      'deployment' => 'none',
+    ], $options->getModifiedOptions());
+  }
+
+  /**
    * Tests that unknown options return NULL.
    */
   public function testGetMissingOptionReturnsNull() {

@@ -10,6 +10,7 @@ use Composer\Package\PackageInterface;
 use Composer\Util\Filesystem;
 use Composer\Console\Application;
 use Composer\Command\ConfigCommand;
+use Composer\Json\JsonFile;
 use Symfony\Component\Console\Input\ArrayInput;
 use iqual\Composer\ProjectScaffold\Operations\OperationData;
 use iqual\Composer\ProjectScaffold\Operations\OperationFactory;
@@ -153,6 +154,14 @@ class Handler {
     $allowed_packages = $this->manageAllowedPackages->getAllowedPackages();
     $new_packages = $this->manageAllowedPackages->getNewPackages();
     $allowed_packages = $allowed_packages + $new_packages;
+    // Make sure the root package stays at the end of the list, so that it
+    // overrides all the preceding packages, including newly required ones.
+    $root_package_name = $this->rootPackageName();
+    if (isset($allowed_packages[$root_package_name])) {
+      $root_package = $allowed_packages[$root_package_name];
+      unset($allowed_packages[$root_package_name]);
+      $allowed_packages[$root_package_name] = $root_package;
+    }
     if (empty($allowed_packages)) {
       $this->io->write("No projects scaffolded because no packages are available or allowed in the composer.json file.");
       return;
@@ -170,9 +179,16 @@ class Handler {
     $scaffold_options = $this->manageOptions->getOptions();
     $modified_packages = $this->manageAllowedPackages->getModifiedPackages();
 
-    // Add new packages to the `allowed-packages`.
+    // Add new packages to the `allowed-packages`. Only append packages
+    // that are not already listed, and never add the root package to its
+    // own `allowed-packages`.
     if (!empty($new_packages)) {
-      $allowed_packages_array = array_keys((array) $allowed_packages);
+      $allowed_packages_array = $scaffold_options->allowedPackages();
+      foreach (array_keys($new_packages) as $new_package_name) {
+        if ($new_package_name !== $root_package_name && !in_array($new_package_name, $allowed_packages_array, TRUE)) {
+          $allowed_packages_array[] = $new_package_name;
+        }
+      }
       $scaffold_options->setOption("allowed-packages", $allowed_packages_array);
     }
 
@@ -325,9 +341,17 @@ class Handler {
   protected function writeOptionsToComposerFiles(ScaffoldOptions $scaffold_options) {
     $this->io->write("Writing variables to 'extra' section of top-level composer.json file.");
 
-    // Update the composer.json file with the modified extra options.
-    $scaffold_extras = $scaffold_options->getAllOptions();
-    unset($scaffold_extras["assets"]);
+    // Update the composer.json file surgically: read the currently
+    // authored options from the file and apply only the modified options,
+    // so that authored keys (e.g. `assets`) are preserved verbatim and
+    // default values (e.g. `locations`) are never materialized into the
+    // composer.json file.
+    $composer_file = $this->composer->getConfig()->getConfigSource()->getName();
+    $composer_contents = (new JsonFile($composer_file))->read();
+    $scaffold_extras = $composer_contents['extra']['project-scaffold'] ?? [];
+    foreach ($scaffold_options->getModifiedOptions() as $name => $value) {
+      $scaffold_extras[$name] = $value;
+    }
     $input = new ArrayInput([
       'setting-key' => 'extra.project-scaffold',
       'setting-value' => [json_encode($scaffold_extras)],

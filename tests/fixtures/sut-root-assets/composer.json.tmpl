@@ -1,0 +1,30 @@
+{
+    "name": "fixtures/sut-root-assets",
+    "description": "Fixture project scaffolding its own root assets.",
+    "type": "project",
+    "license": "proprietary",
+    "require": {
+        "iqual/test-assets": "^1.0"
+    },
+    "repositories": [path-repositories],
+    "config": {
+        "allow-plugins": {
+            "iqual/project-scaffold": true
+        }
+    },
+    "extra": {
+        "project-scaffold": {
+            "name": "root-assets-project",
+            "runtime": {
+                "php_version": "8.2"
+            },
+            "deployment": "none",
+            "allowed-packages": [
+                "iqual/test-assets"
+            ],
+            "assets": {
+                "replace": "root-assets/replace"
+            }
+        }
+    }
+}

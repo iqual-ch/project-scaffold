@@ -35,6 +35,13 @@ class ScaffoldOptions {
   protected $modified = FALSE;
 
   /**
+   * The names of the options that have been modified.
+   *
+   * @var array
+   */
+  protected $modifiedOptions = [];
+
+  /**
    * States if the user should be prompted for setting options.
    *
    * @var bool
@@ -208,6 +215,16 @@ class ScaffoldOptions {
   }
 
   /**
+   * Gets the options that have been modified with their current values.
+   *
+   * @return array
+   *   Map of modified option names to their current values.
+   */
+  public function getModifiedOptions() {
+    return array_intersect_key($this->options, $this->modifiedOptions);
+  }
+
+  /**
    * Get the package name.
    *
    * @return string
@@ -239,13 +256,9 @@ class ScaffoldOptions {
    *   The value to set.
    */
   public function setOption($name, $value) {
-    if ($this->hasOption($name)) {
-      if ($this->options[$name] !== $value) {
-        $this->modified = TRUE;
-      }
-    }
-    else {
+    if (!$this->hasOption($name) || $this->options[$name] !== $value) {
       $this->modified = TRUE;
+      $this->modifiedOptions[$name] = TRUE;
     }
     $this->options[$name] = $value;
   }
