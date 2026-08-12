@@ -135,6 +135,38 @@ JSON;
   }
 
   /**
+   * Tests that mixed templated and plain sources collide on one destination.
+   *
+   * A plain `README.md` in the later package overrides a `README.md.twig`
+   * in the earlier package and vice versa (`Makefile.twig` overrides
+   * `Makefile`), because both sources resolve to the same destination file.
+   */
+  public function testMixedTemplatedAndPlainSourcesOverrideSameDestination() {
+    [$sut, $io] = $this->scaffoldPresetProject(['iqual/test-assets-override-mixed' => 'test-assets-override-mixed']);
+    $output = $io->getOutput();
+
+    $expected_readme = "# Plain README\n\nThis README is provided by the mixed override package.\n";
+    $expected_makefile = "all:\n\t@echo \"override for preset-project\"\n";
+
+    // The later package wins and the earlier operations become skips.
+    $this->assertSame($expected_readme, file_get_contents($sut . '/README.md'));
+    $this->assertSame($expected_makefile, file_get_contents($sut . '/Makefile'));
+    $this->assertStringContainsString('Skipping [project-root]/README.md: overridden in iqual/test-assets-override-mixed', $output);
+    $this->assertStringContainsString('Skipping [project-root]/Makefile: overridden in iqual/test-assets-override-mixed', $output);
+
+    // A second run must be idempotent and not flip the contents back to the
+    // overridden package's version.
+    $second_io = $this->fixtures->io();
+    $composer = $this->fixtures->createComposer($second_io, $sut);
+    $this->fixtures->installFixturePackage($composer, $sut, 'test-assets', 'iqual/test-assets');
+    $this->fixtures->installFixturePackage($composer, $sut, 'test-assets-override-mixed', 'iqual/test-assets-override-mixed');
+    $this->fixtures->runScaffold($composer, $second_io);
+
+    $this->assertSame($expected_readme, file_get_contents($sut . '/README.md'));
+    $this->assertSame($expected_makefile, file_get_contents($sut . '/Makefile'));
+  }
+
+  /**
    * Tests that the scaffold command hooks reach the composer script listeners.
    */
   public function testScaffoldCommandHooksAreDispatched() {

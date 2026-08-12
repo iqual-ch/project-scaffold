@@ -1,0 +1,15 @@
+{
+    "name": "iqual/test-assets-override-mixed",
+    "description": "Fixture asset package overriding files of iqual/test-assets with mixed templated and plain sources.",
+    "type": "library",
+    "require": {
+        "iqual/project-scaffold": "*"
+    },
+    "extra": {
+        "project-scaffold": {
+            "assets": {
+                "replace": "assets/replace"
+            }
+        }
+    }
+}

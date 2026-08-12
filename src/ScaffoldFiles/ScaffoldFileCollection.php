@@ -66,6 +66,14 @@ class ScaffoldFileCollection implements \IteratorAggregate {
           $destination_rel_path = "[project-root]/" . $destination_rel_path;
         }
 
+        // Templated sources are rendered to a destination without the
+        // `.twig` suffix. Strip it here, so that a templated and a plain
+        // source targeting the same destination file are keyed identically
+        // and detected as an override of the same file.
+        if (str_ends_with($destination_rel_path, ".twig")) {
+          $destination_rel_path = substr($destination_rel_path, 0, -strlen(".twig"));
+        }
+
         $destination = ScaffoldFilePath::destinationPath($package_name, $destination_rel_path, $location_replacements);
 
         // If there was already a scaffolding operation happening at this path,
