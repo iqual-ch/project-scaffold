@@ -188,6 +188,26 @@ JSON;
   }
 
   /**
+   * Tests that a replace asset with empty contents deletes the destination.
+   */
+  public function testReplaceWithEmptySourceDeletesDestination() {
+    [$sut, $io] = $this->scaffoldPresetProject();
+
+    $this->assertFileDoesNotExist($sut . '/delete-me.txt');
+    $this->assertStringContainsString('Deleting', $io->getOutput());
+    $this->assertStringContainsString('delete-me.txt', $io->getOutput());
+
+    // A second run skips the operation because the destination is gone.
+    $second_io = $this->fixtures->io();
+    $composer = $this->fixtures->createComposer($second_io, $sut);
+    $this->fixtures->installFixturePackage($composer, $sut, 'test-assets', 'iqual/test-assets');
+    $this->fixtures->runScaffold($composer, $second_io);
+
+    $this->assertFileDoesNotExist($sut . '/delete-me.txt');
+    $this->assertStringContainsString('because source is empty and destination inexistent', $second_io->getOutput());
+  }
+
+  /**
    * Tests that nothing is scaffolded without allowed packages.
    */
   public function testScaffoldWithoutAllowedPackages() {
