@@ -266,6 +266,42 @@ class ScaffoldOptions {
   }
 
   /**
+   * Merges a package's scaffold variables with the root project's variables.
+   *
+   * Behaves like array_replace_recursive() for maps (string-keyed arrays):
+   * the root project's value wins per key. List values (sequential arrays)
+   * are not merged by index but replaced wholesale by the root project's
+   * value, so that the root project can shrink or empty a list defined by
+   * a package.
+   *
+   * @param array $package_variables
+   *   The scaffold variables of the asset package.
+   * @param array $root_variables
+   *   The scaffold variables of the root project.
+   *
+   * @return array
+   *   The merged scaffold variables.
+   */
+  public static function mergeVariables(array $package_variables, array $root_variables) {
+    foreach ($root_variables as $key => $value) {
+      // Merge two arrays recursively unless either side is a non-empty
+      // list: an authored empty array still empties a package's list,
+      // but keeps a package's map defaults.
+      if (array_key_exists($key, $package_variables)
+        && is_array($package_variables[$key]) && is_array($value)
+        && (!array_is_list($package_variables[$key]) || $package_variables[$key] === [])
+        && (!array_is_list($value) || $value === [])) {
+        $package_variables[$key] = static::mergeVariables($package_variables[$key], $value);
+      }
+      // Everything else, including lists, is replaced by the root value.
+      else {
+        $package_variables[$key] = $value;
+      }
+    }
+    return $package_variables;
+  }
+
+  /**
    * Determines whether a given named location is defined.
    *
    * @param string $name

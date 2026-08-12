@@ -147,7 +147,7 @@ class MergeOperation extends AbstractOperation {
     $scaffold_package_options = $package_options->getAllOptions();
 
     // Resolve the package's scaffold options and the root options.
-    $scaffold_variables = array_replace_recursive($scaffold_package_options, $scaffold_options);
+    $scaffold_variables = ScaffoldOptions::mergeVariables($scaffold_package_options, $scaffold_options);
 
     // Generate new contents.
     $new_contents = $this->contents($scaffold_variables);

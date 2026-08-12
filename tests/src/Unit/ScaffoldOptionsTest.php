@@ -159,4 +159,40 @@ class ScaffoldOptionsTest extends TestCase {
     $this->assertNull($options->getOption('missing'));
   }
 
+  /**
+   * Tests that root list values replace package default lists wholesale.
+   */
+  public function testMergeVariablesReplacesLists() {
+    $package = [
+      'languages' => ['de', 'fr', 'it'],
+      'runtime' => ['php_version' => '8.3', 'db_version' => '10.6'],
+    ];
+
+    // A shorter root list replaces the package list instead of being
+    // merged into it by index. Maps still merge per key.
+    $merged = ScaffoldOptions::mergeVariables($package, [
+      'languages' => ['en'],
+      'runtime' => ['php_version' => '8.4'],
+    ]);
+    $this->assertSame(['en'], $merged['languages']);
+    $this->assertSame(['php_version' => '8.4', 'db_version' => '10.6'], $merged['runtime']);
+
+    // An empty root array empties a package list but keeps the
+    // defaults of a package map, and package-only keys are preserved.
+    $merged = ScaffoldOptions::mergeVariables($package, [
+      'languages' => [],
+      'runtime' => [],
+    ]);
+    $this->assertSame([], $merged['languages']);
+    $this->assertSame($package['runtime'], $merged['runtime']);
+
+    // Nested lists inside maps are replaced as well.
+    $merged = ScaffoldOptions::mergeVariables(
+      ['routing' => ['languages' => ['de', 'fr'], 'redirect' => TRUE]],
+      ['routing' => ['languages' => ['it']]]
+    );
+    $this->assertSame(['it'], $merged['routing']['languages']);
+    $this->assertTrue($merged['routing']['redirect']);
+  }
+
 }
