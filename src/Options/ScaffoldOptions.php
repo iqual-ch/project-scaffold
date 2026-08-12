@@ -212,6 +212,20 @@ class ScaffoldOptions {
   }
 
   /**
+   * Determines if automatic scaffolding on install and update is enabled.
+   *
+   * The `auto-scaffold` key is deliberately not part of the option defaults,
+   * so that it is only ever present in the options when it was declared in
+   * the composer.json file and never gets added by the options write-back.
+   *
+   * @return bool
+   *   True unless the 'auto-scaffold' option is set to false.
+   */
+  public function autoScaffold() {
+    return (bool) ($this->options['auto-scaffold'] ?? TRUE);
+  }
+
+  /**
    * Gets all options.
    *
    * @return array

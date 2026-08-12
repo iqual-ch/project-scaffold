@@ -78,6 +78,58 @@ class ComposerHookTest extends FunctionalTestBase {
   }
 
   /**
+   * Clones the sut-functional fixture with auto-scaffold disabled.
+   *
+   * @return string
+   *   Path to the cloned fixture project.
+   */
+  protected function cloneProjectWithAutoScaffoldDisabled() {
+    $sut = $this->fixtures->cloneFixtureProject('sut-functional');
+    $definition = json_decode(file_get_contents($sut . '/composer.json'), TRUE);
+    $definition['extra']['project-scaffold']['auto-scaffold'] = FALSE;
+    file_put_contents($sut . '/composer.json', json_encode($definition, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+    return $sut;
+  }
+
+  /**
+   * Tests that the auto-scaffold key disables scaffolding on install.
+   */
+  public function testAutoScaffoldConfigKeyDisablesInstallScaffolding() {
+    $sut = $this->cloneProjectWithAutoScaffoldDisabled();
+    $process = $this->runComposer(['install', '--no-interaction'], $sut);
+
+    $this->assertStringNotContainsString('Processing project scaffold', $this->allOutput($process));
+    $this->assertFileDoesNotExist($sut . '/README.md');
+
+    // The explicit scaffold command is not affected by the opt-out.
+    $process = $this->runComposer(['project:scaffold'], $sut);
+    $this->assertStringContainsString('Processing project scaffold for iqual/test-assets', $this->allOutput($process));
+    $this->assertSame("# functional-project\n\nProject running on PHP 8.2.\n", file_get_contents($sut . '/README.md'));
+  }
+
+  /**
+   * Tests that the environment variable disables scaffolding on install.
+   */
+  public function testAutoScaffoldEnvVarDisablesInstallScaffolding() {
+    $sut = $this->fixtures->cloneFixtureProject('sut-functional');
+    $process = $this->runComposer(['install', '--no-interaction'], $sut, TRUE, ['PROJECT_SCAFFOLD_AUTO' => '0']);
+
+    $this->assertStringNotContainsString('Processing project scaffold', $this->allOutput($process));
+    $this->assertFileDoesNotExist($sut . '/README.md');
+  }
+
+  /**
+   * Tests that the environment variable wins over the auto-scaffold key.
+   */
+  public function testAutoScaffoldEnvVarOverridesConfigKey() {
+    $sut = $this->cloneProjectWithAutoScaffoldDisabled();
+    $process = $this->runComposer(['install', '--no-interaction'], $sut, TRUE, ['PROJECT_SCAFFOLD_AUTO' => '1']);
+
+    $this->assertStringContainsString('Processing project scaffold for iqual/test-assets', $this->allOutput($process));
+    $this->assertSame("# functional-project\n\nProject running on PHP 8.2.\n", file_get_contents($sut . '/README.md'));
+  }
+
+  /**
    * Tests that `composer update --lock` does not scaffold.
    */
   public function testUpdateLockDoesNotScaffold() {

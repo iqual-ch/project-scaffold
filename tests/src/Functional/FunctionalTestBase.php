@@ -54,12 +54,14 @@ abstract class FunctionalTestBase extends TestCase {
    *   The working directory to run in.
    * @param bool $must_succeed
    *   Whether a non-zero exit code should fail the test.
+   * @param string[] $extra_env
+   *   Additional environment variables for the composer process.
    *
    * @return \Symfony\Component\Process\Process
    *   The finished process.
    */
-  protected function runComposer(array $args, string $cwd, bool $must_succeed = TRUE) {
-    $env = [
+  protected function runComposer(array $args, string $cwd, bool $must_succeed = TRUE, array $extra_env = []) {
+    $env = $extra_env + [
       'COMPOSER_HOME' => $cwd . '/.composer-home',
       'COMPOSER_CACHE_DIR' => $cwd . '/.composer-home/cache',
     ];

@@ -14,7 +14,9 @@ use Composer\Plugin\PluginEvents;
 use Composer\Plugin\PluginInterface;
 use Composer\Script\Event;
 use Composer\Script\ScriptEvents;
+use Composer\Util\Platform;
 use iqual\Composer\ProjectScaffold\CommandProvider as ScaffoldCommandProvider;
+use iqual\Composer\ProjectScaffold\Options\ManageOptions;
 
 /**
  * Composer plugin for handling drupal scaffold.
@@ -134,9 +136,36 @@ class Plugin implements PluginInterface, EventSubscriberInterface, Capable {
    */
   public function postCmd(Event $event) {
     // Do not scaffold if it's a `composer update --lock` command to prevent loops.
-    if (!$this->lockUpdateCommand) {
-      $this->handler()->scaffold();
+    if ($this->lockUpdateCommand) {
+      return;
     }
+    // Do not scaffold when automatic scaffolding has been disabled via the
+    // environment or the root composer.json. Explicit commands like
+    // `composer project:scaffold` are not affected by this.
+    if (!$this->isAutoScaffoldEnabled()) {
+      $this->io->write("Skipping automatic project scaffolding because it is disabled.", TRUE, IOInterface::VERBOSE);
+      return;
+    }
+    $this->handler()->scaffold();
+  }
+
+  /**
+   * Determines whether automatic scaffolding on post command events is enabled.
+   *
+   * The PROJECT_SCAFFOLD_AUTO environment variable ("0" or "false" disables,
+   * "1" or "true" enables) takes precedence over the `auto-scaffold` key in
+   * the `extra.project-scaffold` section of the root composer.json. When
+   * neither is set, automatic scaffolding is enabled.
+   *
+   * @return bool
+   *   True if automatic scaffolding is enabled.
+   */
+  protected function isAutoScaffoldEnabled() {
+    $env = Platform::getEnv('PROJECT_SCAFFOLD_AUTO');
+    if ($env !== FALSE && $env !== '') {
+      return !in_array(strtolower($env), ['0', 'false'], TRUE);
+    }
+    return (new ManageOptions($this->composer))->getOptions()->autoScaffold();
   }
 
   /**

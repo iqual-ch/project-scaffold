@@ -37,6 +37,15 @@ Allow the plugin when Composer asks, then require one or more asset packages. Th
 
 Scaffolding also runs automatically after `composer install`, `update`, `require` and `create-project`.
 
+### Disabling automatic scaffolding
+
+Automatic scaffolding after `install` and `update` can be turned off; the explicit `project:*` commands keep working either way:
+
+* Set `extra.project-scaffold.auto-scaffold` to `false` in the root `composer.json`.
+* Or set the environment variable `PROJECT_SCAFFOLD_AUTO=0` (or `false`). The environment variable wins over the `composer.json` key, so `PROJECT_SCAFFOLD_AUTO=1` (or `true`) re-enables automatic scaffolding even when the key is set to `false`.
+
+Note that `composer install --no-scripts` does **not** disable automatic scaffolding — the plugin subscribes to Composer events, which are not scripts. Only `--no-plugins`, or the opt-out above, prevents it.
+
 ## Versions
 
 | Branch | Requirements | Status |

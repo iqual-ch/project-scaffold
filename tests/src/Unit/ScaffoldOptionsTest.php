@@ -131,6 +131,27 @@ class ScaffoldOptionsTest extends TestCase {
   }
 
   /**
+   * Tests the auto-scaffold option and its default.
+   */
+  public function testAutoScaffold() {
+    $options = ScaffoldOptions::create([], FALSE, 'test/package');
+    $this->assertTrue($options->autoScaffold());
+    // The key must not be added to the options by reading it, so that the
+    // options write-back never adds it to the composer.json file.
+    $this->assertNull($options->getOption('auto-scaffold'));
+
+    $options = ScaffoldOptions::create([
+      'project-scaffold' => ['auto-scaffold' => FALSE],
+    ], FALSE, 'test/package');
+    $this->assertFalse($options->autoScaffold());
+
+    $options = ScaffoldOptions::create([
+      'project-scaffold' => ['auto-scaffold' => TRUE],
+    ], FALSE, 'test/package');
+    $this->assertTrue($options->autoScaffold());
+  }
+
+  /**
    * Tests that unknown options return NULL.
    */
   public function testGetMissingOptionReturnsNull() {
