@@ -131,8 +131,13 @@ class AddOperation extends AbstractOperation {
     if (empty($new_contents)) {
       // @todo maybe change mechanism and add DeleteOperation
       if (file_exists($destination_path)) {
-        $fs->remove($destination_path);
-        $io->write($interpolator->interpolate("  - Deleting <info>[dest-full-path]</info>."));
+        try {
+          // Delete the file at the destination.
+          return $this->deleteScaffold($destination, $io);
+        }
+        catch (\Exception $e) {
+          $io->write($interpolator->interpolate("  - Could not delete <info>[dest-full-path]</info>: <warning>" . $e->getMessage() . "</warning>"));
+        }
       }
       else {
         $io->write($interpolator->interpolate("  - Skipping <info>[dest-full-path]</info> because source is empty and destination inexistent."), TRUE, 4);
@@ -174,14 +179,7 @@ class AddOperation extends AbstractOperation {
 
     // Make sure the destination directory is writable, if not change
     // permissions temporarily.
-    $directory_mode = NULL;
-    if (!is_writable($destination_directory)) {
-      $directory_mode = fileperms($destination_directory) & 000777;
-      $io->write($interpolator->interpolate("  - Changing <info>[dest-full-path]</info> directory permissions temporarily."), TRUE, 4);
-      if (!@chmod($destination_directory, $directory_mode | 0200)) {
-        throw new \RuntimeException($interpolator->interpolate("Could not make the directory of <info>[dest-rel-path]</info> writable!"));
-      }
-    }
+    $directory_mode = $this->makeDestinationDirectoryWritable($destination, $io);
 
     try {
       // Make sure the file is writable, if not change permissions temporarily.
@@ -212,6 +210,67 @@ class AddOperation extends AbstractOperation {
     $operation_type = $this->overwrite ? "Replace" : "Add";
     $io->write($interpolator->interpolate("  - Writing <info>[dest-full-path]</info> ($operation_type)"));
     return new ScaffoldResult($destination, $this->overwrite);
+  }
+
+  /**
+   * Deletes the file at the destination.
+   *
+   * @param \iqual\Composer\ProjectScaffold\ScaffoldFiles\ScaffoldFilePath $destination
+   *   Scaffold file to process.
+   * @param \Composer\IO\IOInterface $io
+   *   IOInterface to writing to.
+   *
+   * @return \iqual\Composer\ProjectScaffold\Operations\ScaffoldResult
+   *   The scaffold result.
+   */
+  protected function deleteScaffold(ScaffoldFilePath $destination, IOInterface $io) {
+    $fs = new Filesystem();
+    $interpolator = $destination->getInterpolator();
+    $destination_directory = dirname($destination->fullPath());
+
+    // Make sure the destination directory is writable, if not change
+    // permissions temporarily.
+    $directory_mode = $this->makeDestinationDirectoryWritable($destination, $io);
+
+    try {
+      // Delete the file at the destination.
+      $fs->remove($destination->fullPath());
+    }
+    finally {
+      // Revert possible directory permissions changes.
+      if ($directory_mode !== NULL) {
+        @chmod($destination_directory, $directory_mode);
+      }
+    }
+
+    $io->write($interpolator->interpolate("  - Deleting <info>[dest-full-path]</info>."));
+    return new ScaffoldResult($destination, FALSE);
+  }
+
+  /**
+   * Makes the destination directory writable if it is not.
+   *
+   * @param \iqual\Composer\ProjectScaffold\ScaffoldFiles\ScaffoldFilePath $destination
+   *   Scaffold file to process.
+   * @param \Composer\IO\IOInterface $io
+   *   IOInterface to writing to.
+   *
+   * @return int|null
+   *   The original directory permissions if they were changed, NULL otherwise.
+   */
+  protected function makeDestinationDirectoryWritable(ScaffoldFilePath $destination, IOInterface $io) {
+    $interpolator = $destination->getInterpolator();
+    $destination_directory = dirname($destination->fullPath());
+
+    $directory_mode = NULL;
+    if (!is_writable($destination_directory)) {
+      $directory_mode = fileperms($destination_directory) & 000777;
+      $io->write($interpolator->interpolate("  - Changing <info>[dest-full-path]</info> directory permissions temporarily."), TRUE, 4);
+      if (!@chmod($destination_directory, $directory_mode | 0200)) {
+        throw new \RuntimeException($interpolator->interpolate("Could not make the directory of <info>[dest-rel-path]</info> writable!"));
+      }
+    }
+    return $directory_mode;
   }
 
   /**
