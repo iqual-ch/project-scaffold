@@ -73,4 +73,18 @@ class InterpolatorTest extends TestCase {
     $this->assertSame('', $interpolator->interpolate(NULL));
   }
 
+  /**
+   * Tests that list values are joined into a comma-separated string.
+   */
+  public function testListValuesAreJoined() {
+    $interpolator = new Interpolator();
+    $interpolator->setData([
+      'languages' => ['de', 'fr'],
+      'runtime' => ['php_version' => '8.3'],
+    ]);
+    $this->assertSame('Languages: de,fr', $interpolator->interpolate('Languages: [languages]'));
+    // Maps cannot be represented in a string and fall back to the default.
+    $this->assertSame('Runtime: ', $interpolator->interpolate('Runtime: [runtime]'));
+  }
+
 }

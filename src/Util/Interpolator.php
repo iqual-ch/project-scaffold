@@ -125,6 +125,17 @@ class Interpolator {
     $replacements = [];
     foreach ($tokens as $sourceText => $key) {
       $replacement_text = array_key_exists($key, $data) ? $data[$key] : $default;
+      // Lists of scalar values (e.g. multiple choice answers) are joined
+      // into a comma-separated string. Other arrays cannot be represented
+      // in a string and fall back to the default.
+      if (is_array($replacement_text)) {
+        if (array_is_list($replacement_text) && $replacement_text === array_filter($replacement_text, 'is_scalar')) {
+          $replacement_text = implode(",", $replacement_text);
+        }
+        else {
+          $replacement_text = $default;
+        }
+      }
       if ($replacement_text !== FALSE) {
         $replacements[$sourceText] = $replacement_text;
       }
