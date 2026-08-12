@@ -22,7 +22,7 @@ class ComposerInitCommand extends BaseCommand {
   /**
    * {@inheritdoc}
    */
-  protected function configure() {
+  protected function configure(): void {
     $this
       ->setName('project:init')
       ->setAliases(['project:update'])
