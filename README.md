@@ -17,7 +17,7 @@ An asset package declares its files under `extra.project-scaffold.assets`, group
 
 Sources ending in `.twig` are rendered with the project's variables before being placed. See [creating a project asset package](./docs/asset-package.md) for the full format.
 
-The root project stays in control: destination paths listed under `extra.project-scaffold.ignore-files` (glob patterns allowed) are never scaffolded, no matter which package provides them.
+The root project stays in control: it can ignore individual files, disable automatic scaffolding, force a hard re-scaffold or preview changes with a dry run. See [controlling scaffolding in the root project](./docs/root-project.md).
 
 ## Getting started
 
@@ -37,24 +37,7 @@ Allow the plugin when Composer asks, then require one or more asset packages. Th
 
 Scaffolding also runs automatically after `composer install`, `update`, `require` and `create-project`.
 
-### Forcing a hard re-scaffold
-
-Both `project:scaffold` and `project:init` accept a `--force` flag that re-scaffolds a project from scratch: `add` assets overwrite files that already exist at their destination, and `merge` assets replace the destination with a fresh render of their source instead of merging values into it. `replace` assets always overwrite, with or without the flag.
-
-> **Warning:** with `--force` any local modifications to scaffolded files are **lost** — including local edits to `add` files and values that were merged into `.env`, line-based, JSON or YAML files. Commit or back up local changes before running it.
-
-### Previewing changes with a dry run
-
-Both commands also accept a `--dry-run` flag that reports what each operation would do — every would-be action is marked with `(dry-run)` in the output — without changing anything: no files are created, overwritten, merged or deleted, and no variables or lock file hash are written to `composer.json` and `composer.lock`. Package questions are still evaluated (and, with `project:init`, asked) so the preview matches a real run, but the answers are not saved. Combine `--dry-run` with `--force` to preview a hard re-scaffold. Like Composer's own `--dry-run`, the `pre-`/`post-project-scaffold-cmd` scripts are not dispatched during a dry run.
-
-### Disabling automatic scaffolding
-
-Automatic scaffolding after `install` and `update` can be turned off; the explicit `project:*` commands keep working either way:
-
-* Set `extra.project-scaffold.auto-scaffold` to `false` in the root `composer.json`.
-* Or set the environment variable `PROJECT_SCAFFOLD_AUTO=0` (or `false`). The environment variable wins over the `composer.json` key, so `PROJECT_SCAFFOLD_AUTO=1` (or `true`) re-enables automatic scaffolding even when the key is set to `false`.
-
-Note that `composer install --no-scripts` does **not** disable automatic scaffolding — the plugin subscribes to Composer events, which are not scripts. Only `--no-plugins`, or the opt-out above, prevents it.
+Both commands accept a `--force` flag for a hard re-scaffold and a `--dry-run` flag to preview changes, and the automatic scaffolding can be disabled — see [controlling scaffolding in the root project](./docs/root-project.md).
 
 ## Versions
 
