@@ -64,6 +64,32 @@ class OperationDataTest extends TestCase {
   }
 
   /**
+   * Tests that an asset location named 'skip' with a path is rejected.
+   */
+  public function testSkipOperationNameWithPathThrows() {
+    $this->expectException(\RuntimeException::class);
+    $this->expectExceptionMessage("Asset location skip cannot declare scaffold files. To skip an asset location, set its value to 'false' (e.g. \"add\": false).");
+    new OperationData('skip', 'some/path');
+  }
+
+  /**
+   * Tests that an asset location named 'skip' with an array is rejected.
+   */
+  public function testSkipOperationNameWithArrayThrows() {
+    $this->expectException(\RuntimeException::class);
+    $this->expectExceptionMessage("Asset location skip cannot declare scaffold files. To skip an asset location, set its value to 'false' (e.g. \"add\": false).");
+    new OperationData('skip', ['path' => 'some/path']);
+  }
+
+  /**
+   * Tests that an asset location named 'skip' may still be set to false.
+   */
+  public function testSkipOperationNameWithFalseBecomesSkip() {
+    $data = new OperationData('skip', FALSE);
+    $this->assertSame('skip', $data->mode());
+  }
+
+  /**
    * Tests that a default implies force-append.
    */
   public function testDefaultImpliesForceAppend() {

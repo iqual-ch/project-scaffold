@@ -273,6 +273,65 @@ JSON;
   }
 
   /**
+   * Tests that asset locations declared as false are skipped without error.
+   *
+   * Both an asset package and the root package may disable one of their
+   * asset locations with `"<location>": false`. The declared skip is
+   * logged, contributes no file operations, and does not affect the other
+   * asset locations of the same or of other packages.
+   */
+  public function testDeclaredFalseAssetLocationIsSkipped() {
+    $sut = $this->fixtures->cloneFixtureProject('sut-preset');
+    $definition = json_decode(file_get_contents($sut . '/composer.json'), TRUE);
+    $definition['extra']['project-scaffold']['allowed-packages'][] = 'iqual/test-assets-skip';
+    $definition['extra']['project-scaffold']['assets'] = ['merge' => FALSE];
+    file_put_contents($sut . '/composer.json', json_encode($definition, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+
+    $io = $this->fixtures->io();
+    $composer = $this->fixtures->createComposer($io, $sut);
+    $this->fixtures->installFixturePackage($composer, $sut, 'test-assets', 'iqual/test-assets');
+    $this->fixtures->installFixturePackage($composer, $sut, 'test-assets-skip', 'iqual/test-assets-skip');
+    $this->fixtures->runScaffold($composer, $io);
+    $output = $io->getOutput();
+
+    // The declared skips of the package and the root package are logged.
+    $this->assertStringContainsString('Processing project scaffold for iqual/test-assets-skip:', $output);
+    $this->assertStringContainsString('Skipping replace assets: disabled', $output);
+    $this->assertStringContainsString('Processing project scaffold for fixtures/sut-preset:', $output);
+    $this->assertStringContainsString('Skipping merge assets: disabled', $output);
+    $this->assertStringContainsString('All assets have been scaffolded.', $output);
+
+    // The other asset locations of the skip package still scaffold.
+    $this->assertSame("Added by the skip fixture package.\n", file_get_contents($sut . '/from-skip-package.txt'));
+
+    // A declared skip does not disable other packages' asset locations.
+    $this->assertSame("# preset-project\n\nProject running on PHP 8.2.\n", file_get_contents($sut . '/README.md'));
+    $this->assertSame("APP_NAME=preset-project\nDEBUG=true\nPHP_VERSION=8.2\n", file_get_contents($sut . '/.env'));
+  }
+
+  /**
+   * Tests that an asset location named 'skip' fails loudly.
+   *
+   * Declaring `"skip": "some/path"` used to silently fall through to the
+   * default 'add' operation. It must abort the run with a clear error
+   * instead.
+   */
+  public function testSkipAssetLocationNameThrows() {
+    $sut = $this->fixtures->cloneFixtureProject('sut-preset');
+    $definition = json_decode(file_get_contents($sut . '/composer.json'), TRUE);
+    $definition['extra']['project-scaffold']['assets'] = ['skip' => 'root-assets'];
+    file_put_contents($sut . '/composer.json', json_encode($definition, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+
+    $io = $this->fixtures->io();
+    $composer = $this->fixtures->createComposer($io, $sut);
+    $this->fixtures->installFixturePackage($composer, $sut, 'test-assets', 'iqual/test-assets');
+
+    $this->expectException(\RuntimeException::class);
+    $this->expectExceptionMessage("Asset location skip cannot declare scaffold files. To skip an asset location, set its value to 'false' (e.g. \"add\": false).");
+    $this->fixtures->runScaffold($composer, $io);
+  }
+
+  /**
    * Tests that nothing is scaffolded without allowed packages.
    */
   public function testScaffoldWithoutAllowedPackages() {

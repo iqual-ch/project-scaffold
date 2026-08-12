@@ -50,7 +50,9 @@ class OperationFactory {
   public function create(PackageInterface $package, OperationData $operation_data) {
     switch ($operation_data->mode()) {
       case SkipOperation::ID:
-        return new SkipOperation();
+        // A skip is declared for a whole asset location (e.g.
+        // "replace": false), so the destination is the location name.
+        return new SkipOperation("  - Skipping <info>[dest-rel-path]</info> assets: disabled");
 
       case AddOperation::ID:
         return $this->createAddOperation($package, $operation_data);

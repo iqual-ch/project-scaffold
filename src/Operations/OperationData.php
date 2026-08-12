@@ -219,6 +219,9 @@ class OperationData {
     if (empty($value)) {
       throw new \RuntimeException("Asset location {$operation} cannot be empty.");
     }
+    if ($operation == SkipOperation::ID) {
+      throw new \RuntimeException("Asset location {$operation} cannot declare scaffold files. To skip an asset location, set its value to 'false' (e.g. \"add\": false).");
+    }
     if (is_string($value)) {
       $value = [self::PATH => $value];
     }

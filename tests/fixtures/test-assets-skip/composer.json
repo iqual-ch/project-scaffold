@@ -1,0 +1,16 @@
+{
+    "name": "iqual/test-assets-skip",
+    "description": "Fixture asset package declaring a disabled asset location.",
+    "type": "library",
+    "require": {
+        "iqual/project-scaffold": "*"
+    },
+    "extra": {
+        "project-scaffold": {
+            "assets": {
+                "add": "assets/add",
+                "replace": false
+            }
+        }
+    }
+}

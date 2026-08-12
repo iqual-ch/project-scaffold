@@ -49,6 +49,16 @@ class ScaffoldFileCollection implements \IteratorAggregate {
       }
 
       foreach ($package_file_mappings as $type => $op) {
+        // An asset location declared as `false` becomes a single skip
+        // operation without any source files to enumerate. Record it under
+        // its asset location name so that the skip is logged, without
+        // participating in the destination collision handling.
+        if ($op instanceof SkipOperation) {
+          $destination = ScaffoldFilePath::destinationPath($package_name, $type, $location_replacements);
+          $this->scaffoldFilesByProject[$package_name][$type] = new ScaffoldFileInfo($destination, $op);
+          continue;
+        }
+
         if ($type == "read") {
           $destination = ScaffoldFilePath::destinationPath($package_name, NULL, $location_replacements);
           $scaffold_file = new ScaffoldFileInfo($destination, $op);
@@ -178,8 +188,9 @@ class ScaffoldFileCollection implements \IteratorAggregate {
     $results = [];
     foreach ($this as $scaffold_files) {
       foreach ($scaffold_files as $op => $scaffold_file) {
-        // Ignore "read" operations.
-        if ($op != "read") {
+        // Ignore "read" and "skip" operations, since they never write
+        // to their destination.
+        if ($op != "read" && !$scaffold_file->op() instanceof SkipOperation) {
           // Check if files have changed but ignore templated files,
           // since their variables are not yet available.
           if ($scaffold_file->op()->isTemplated() === FALSE && !$scaffold_file->hasChanged()) {
