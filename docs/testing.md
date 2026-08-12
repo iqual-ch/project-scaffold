@@ -27,6 +27,16 @@ The `test-assets-platform` fixture package mirrors the shapes of the production 
 
 The functional tests use the `composer` binary found on the `PATH`; set the `COMPOSER_TEST_BINARY` environment variable to test against a different one.
 
-## CI
+## Manual simulation
+
+To walk through the interactive questions yourself, `make simulate` clones a fixture project into `tmp/simulation/` (gitignored, inspectable from the host), installs it offline with the same path-repository setup the test suite uses (with `PROJECT_SCAFFOLD_AUTO=0`, so the install itself does not scaffold) and runs an interactive `composer project:init` in it:
+
+```bash
+make simulate          # fresh clone, install, interactive project:init
+make simulate-rerun    # project:init again on the existing clone (round-trip check)
+make simulate-clean    # remove tmp/simulation
+```
+
+The fixture project and preset variables can be overridden, e.g. `make simulate SIMULATION_FIXTURE=sut-questions SIMULATION_PRESETS="multilingual=yes deployment=none"`. The default presets enable the multiple choice languages question of the `test-assets` package. Composer's home and cache directories are isolated inside the simulation directory. If the prompts do not appear (no TTY), run the `composer project:init` step manually from a `ddev ssh` shell in `tmp/simulation`.
 
 GitHub Actions (`.github/workflows/ci.yml`) runs static analysis (phpstan), the unit and integration suites on PHP 8.3/8.4/8.5 with lowest and highest dependencies, and the functional suite against the oldest supported, the latest stable and the snapshot Composer version.
