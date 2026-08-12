@@ -80,6 +80,7 @@ class Plugin implements PluginInterface, EventSubscriberInterface, Capable {
     $this->io = $io;
     $this->eventCommandWasCalled = FALSE;
     $this->lockUpdateCommand = FALSE;
+    $this->preloadClasses();
   }
 
   /**
@@ -163,6 +164,24 @@ class Plugin implements PluginInterface, EventSubscriberInterface, Capable {
       $this->calledCommand = $event->getCommandName();
       if ($event->getCommandName() == 'update' && $event->getInput()->hasOption("lock") && $event->getInput()->getOption("lock")) {
         $this->lockUpdateCommand = TRUE;
+      }
+    }
+  }
+
+  /**
+   * Preloads all of the plugin's class files into memory.
+   *
+   * If this plugin is updated within the same Composer process that has it
+   * activated, PHP may autoload new class files against old, already loaded
+   * ones mid-run. Eagerly loading every class file up front ensures that all
+   * of the plugin's code is in memory before an update can swap the files on
+   * disk.
+   */
+  private function preloadClasses() {
+    $iterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator(__DIR__, \FilesystemIterator::SKIP_DOTS));
+    foreach ($iterator as $file) {
+      if ($file->getExtension() === 'php' && $file->getRealPath() !== __FILE__) {
+        require_once $file->getRealPath();
       }
     }
   }
