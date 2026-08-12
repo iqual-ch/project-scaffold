@@ -1,0 +1,16 @@
+{
+    "name": "iqual/test-assets-readonly",
+    "description": "Fixture asset package scaffolding into a read-only directory.",
+    "type": "library",
+    "require": {
+        "iqual/project-scaffold": "*"
+    },
+    "extra": {
+        "project-scaffold": {
+            "assets": {
+                "replace": "assets/replace",
+                "merge": "assets/merge"
+            }
+        }
+    }
+}

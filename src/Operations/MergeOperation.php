@@ -189,23 +189,43 @@ class MergeOperation extends AbstractOperation {
   protected function copyScaffold(ScaffoldFilePath $destination, IOInterface $io, string $new_contents) {
     $interpolator = $destination->getInterpolator();
     $this->source->addInterpolationData($interpolator);
+    $destination_directory = dirname($destination->fullPath());
 
-    // Make sure the file is writable, if not change permissions temporarily.
-    $file_mode = NULL;
-    if (file_exists($destination->fullPath()) && !is_writable($destination->fullPath())) {
-      $file_mode = (stat($destination->fullPath()))['mode'] & 000777;
-      $io->write($interpolator->interpolate("  - Changing <info>[dest-full-path]</info> file permissions temporarily."), TRUE, 4);
-      chmod($destination->fullPath(), 0644);
+    // Make sure the destination directory is writable, if not change
+    // permissions temporarily.
+    $directory_mode = NULL;
+    if (!is_writable($destination_directory)) {
+      $directory_mode = fileperms($destination_directory) & 000777;
+      $io->write($interpolator->interpolate("  - Changing <info>[dest-full-path]</info> directory permissions temporarily."), TRUE, 4);
+      if (!@chmod($destination_directory, $directory_mode | 0200)) {
+        throw new \RuntimeException($interpolator->interpolate("Could not make the directory of <info>[dest-rel-path]</info> writable!"));
+      }
     }
 
-    // Write the contents.
-    if (file_put_contents($destination->fullPath(), $new_contents) === FALSE) {
-      throw new \RuntimeException($interpolator->interpolate("Could not copy source file <info>[src-rel-path]</info> to <info>[dest-rel-path]</info>!"));
-    }
+    try {
+      // Make sure the file is writable, if not change permissions temporarily.
+      $file_mode = NULL;
+      if (file_exists($destination->fullPath()) && !is_writable($destination->fullPath())) {
+        $file_mode = (stat($destination->fullPath()))['mode'] & 000777;
+        $io->write($interpolator->interpolate("  - Changing <info>[dest-full-path]</info> file permissions temporarily."), TRUE, 4);
+        chmod($destination->fullPath(), 0644);
+      }
 
-    // Revert possible previous permissions changes.
-    if ($file_mode !== NULL) {
-      chmod($destination->fullPath(), $file_mode);
+      // Write the contents.
+      if (file_put_contents($destination->fullPath(), $new_contents) === FALSE) {
+        throw new \RuntimeException($interpolator->interpolate("Could not copy source file <info>[src-rel-path]</info> to <info>[dest-rel-path]</info>!"));
+      }
+
+      // Revert possible previous permissions changes.
+      if ($file_mode !== NULL) {
+        chmod($destination->fullPath(), $file_mode);
+      }
+    }
+    finally {
+      // Revert possible directory permissions changes.
+      if ($directory_mode !== NULL) {
+        @chmod($destination_directory, $directory_mode);
+      }
     }
 
     $io->write($interpolator->interpolate("  - Writing <info>[dest-full-path]</info> (Merge)"));

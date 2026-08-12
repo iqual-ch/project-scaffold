@@ -157,6 +157,37 @@ JSON;
   }
 
   /**
+   * Tests that scaffolding into a read-only directory restores its permissions.
+   */
+  public function testScaffoldIntoReadOnlyDirectory() {
+    if (function_exists('posix_getuid') && posix_getuid() === 0) {
+      $this->markTestSkipped('Directory permissions are not enforced when running as root.');
+    }
+    $sut = $this->fixtures->cloneFixtureProject('sut-preset');
+    $definition = json_decode(file_get_contents($sut . '/composer.json'), TRUE);
+    $definition['extra']['project-scaffold']['allowed-packages'][] = 'iqual/test-assets-readonly';
+    file_put_contents($sut . '/composer.json', json_encode($definition, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+
+    mkdir($sut . '/config');
+    chmod($sut . '/config', 0555);
+
+    $io = $this->fixtures->io();
+    $composer = $this->fixtures->createComposer($io, $sut);
+    $this->fixtures->installFixturePackage($composer, $sut, 'test-assets', 'iqual/test-assets');
+    $this->fixtures->installFixturePackage($composer, $sut, 'test-assets-readonly', 'iqual/test-assets-readonly');
+    $this->fixtures->runScaffold($composer, $io);
+
+    // Restore write permissions before asserting, so that the temporary
+    // directory can be cleaned up even when an assertion fails.
+    $directory_mode = fileperms($sut . '/config') & 0777;
+    chmod($sut . '/config', 0755);
+
+    $this->assertSame(0555, $directory_mode);
+    $this->assertSame("managed: true\n", file_get_contents($sut . '/config/managed.yml'));
+    $this->assertSame("{\n    \"managed\": true\n}\n", file_get_contents($sut . '/config/app.json'));
+  }
+
+  /**
    * Tests that nothing is scaffolded without allowed packages.
    */
   public function testScaffoldWithoutAllowedPackages() {
