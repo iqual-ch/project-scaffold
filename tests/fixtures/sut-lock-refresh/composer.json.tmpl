@@ -1,0 +1,36 @@
+{
+    "name": "fixtures/sut-lock-refresh",
+    "description": "Fixture project for the composer.lock handling of the options write-back.",
+    "type": "project",
+    "license": "proprietary",
+    "require": {
+        "iqual/project-scaffold": "^2.0",
+        "iqual/test-assets": "^1.0",
+        "iqual/test-event-recorder": "^1.0"
+    },
+    "require-dev": {
+        "iqual/test-assets-platform": "^1.0"
+    },
+    "repositories": [path-repositories],
+    "config": {
+        "allow-plugins": {
+            "iqual/project-scaffold": true,
+            "iqual/test-event-recorder": true
+        }
+    },
+    "extra": {
+        "project-scaffold": {
+            "name": "lock-refresh-project",
+            "deployment": "none",
+            "locations": {
+                "project-root": ".",
+                "app-root": "app",
+                "web-root": "app/web"
+            },
+            "allowed-packages": [
+                "iqual/test-assets",
+                "iqual/test-assets-platform"
+            ]
+        }
+    }
+}

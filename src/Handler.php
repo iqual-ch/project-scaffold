@@ -364,7 +364,7 @@ class Handler {
   }
 
   /**
-   * Write the scaffold options to `composer.json` and update lock-file.
+   * Writes the scaffold options to `composer.json` and refreshes the lock hash.
    *
    * @param \iqual\Composer\ProjectScaffold\Options\ScaffoldOptions $scaffold_options
    *   The scaffold options.
@@ -393,11 +393,41 @@ class Handler {
     $command->setComposer($this->composer);
     $command->run($input, $output);
 
-    $this->updateComposerLock();
+    $this->refreshLockHash($composer_file);
   }
 
   /**
-   * Update the `composer.lock`.
+   * Refreshes the content hash of the `composer.lock` after the write-back.
+   *
+   * The write-back only changes the `extra` section, which does not affect
+   * the dependency resolution, so only the content hash is rewritten, like
+   * Composer's own `require` and `bump` commands do. No nested
+   * `composer update --lock` is run here: even with `--no-scripts` it
+   * dispatches the install and update events to all plugins again, e.g.
+   * cweagans/composer-patches 1.x then removes packages with changed patch
+   * sets from the working copy, and `--no-install` never reinstalls them.
+   *
+   * Does nothing when the project has no `composer.lock` file (or the lock
+   * file is disabled with the `lock` config option).
+   *
+   * @param string $composer_file
+   *   Path to the composer.json file.
+   */
+  protected function refreshLockHash(string $composer_file) {
+    $locker = $this->composer->getLocker();
+    if (!$locker->getJsonFile()->exists()) {
+      return;
+    }
+
+    $this->io->write("Updating the hash in the composer.lock file.");
+    $locker->updateHash(new JsonFile($composer_file));
+  }
+
+  /**
+   * Update the `composer.lock` with a nested `composer update --lock`.
+   *
+   * Only used on request when the lock file was already outdated before the
+   * scaffold run (e.g. after a manual composer.json change).
    *
    * Does nothing when the project has no `composer.lock` file.
    */

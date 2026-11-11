@@ -25,6 +25,8 @@ The fixture projects live in `tests/fixtures/`. `*.tmpl` files are interpolated 
 
 The `test-assets-platform` fixture package mirrors the shapes of the production platform asset packages (e.g. `iqual/drupal-platform`): non-string preset variables (floats, booleans, null), templated `add` assets, nested dot-directories, custom YAML tags with scalar values, the `op.new_file` merge context, conditionally-empty templates and question defaults interpolating earlier answers.
 
+The `test-event-recorder` fixture plugin appends every `pre-install-cmd` and `pre-update-cmd` event it receives to `event-recorder.log` in the project root (the events plugins like cweagans/composer-patches hook into), so tests can assert that the plugin never runs a nested dependency update.
+
 The functional tests use the `composer` binary found on the `PATH`; set the `COMPOSER_TEST_BINARY` environment variable to test against a different one.
 
 ## Manual simulation
