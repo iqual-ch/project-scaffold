@@ -63,7 +63,7 @@ jobs:
         include:
           # Oldest supported composer version.
           - php: '8.3'
-            composer: '2.6'
+            composer: '2.9'
             experimental: false
           # Latest stable composer version.
           - php: '8.4'

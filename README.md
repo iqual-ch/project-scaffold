@@ -43,7 +43,7 @@ Both commands accept a `--force` flag for a hard re-scaffold and a `--dry-run` f
 
 | Branch | Requirements | Status |
 | --- | --- | --- |
-| `2.x` | PHP `^8.3`, Composer 2.6+ | Active development |
+| `2.x` | PHP `^8.3`, Composer 2.9+ | Active development |
 | `1.x` | PHP >= 7.3 | Critical fixes only |
 
 ## Development

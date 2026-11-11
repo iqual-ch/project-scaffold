@@ -134,6 +134,13 @@ class Fixtures {
           'versions' => ['iqual/test-assets-platform' => '1.0.0'],
         ],
       ],
+      [
+        'type' => 'path',
+        'url' => $this->fixturesDir() . '/test-event-recorder',
+        'options' => [
+          'versions' => ['iqual/test-event-recorder' => '1.0.0'],
+        ],
+      ],
     ];
     $installed = json_decode(file_get_contents($this->pluginRoot() . '/vendor/composer/installed.json'), TRUE);
     foreach ($installed['packages'] as $package) {

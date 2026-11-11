@@ -1,0 +1,16 @@
+{
+    "name": "iqual/test-event-recorder",
+    "description": "Fixture plugin recording the install and update command events it receives.",
+    "type": "composer-plugin",
+    "require": {
+        "composer-plugin-api": "^2.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Fixtures\\EventRecorder\\": "src"
+        }
+    },
+    "extra": {
+        "class": "Fixtures\\EventRecorder\\Plugin"
+    }
+}

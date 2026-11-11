@@ -2,6 +2,7 @@
 
 namespace iqual\Composer\ProjectScaffold\Tests\Integration;
 
+use Composer\Package\Locker;
 use iqual\Composer\ProjectScaffold\Tests\Fixtures;
 use PHPUnit\Framework\TestCase;
 
@@ -141,6 +142,54 @@ class InteractiveQuestionsTest extends TestCase {
     // skipped without any output.
     $this->assertStringNotContainsString('Updating the hash in the composer.lock file.', $output);
     $this->assertStringNotContainsString('Cannot update lock file', $output);
+  }
+
+  /**
+   * Tests that the write-back only refreshes the hash of the lock file.
+   */
+  public function testWriteBackRefreshesLockFileHash() {
+    $sut = $this->fixtures->cloneFixtureProject('sut-questions');
+    $lock = [
+      'content-hash' => Locker::getContentHash(file_get_contents($sut . '/composer.json')),
+      'packages' => [
+        ['name' => 'iqual/test-assets', 'version' => '1.0.0', 'type' => 'library'],
+      ],
+      'packages-dev' => [],
+      'aliases' => [],
+      'minimum-stability' => 'stable',
+      'stability-flags' => new \stdClass(),
+      'prefer-stable' => FALSE,
+      'prefer-lowest' => FALSE,
+      'platform' => new \stdClass(),
+      'platform-dev' => new \stdClass(),
+      'plugin-api-version' => '2.9.0',
+    ];
+    file_put_contents($sut . '/composer.lock', json_encode($lock, JSON_PRETTY_PRINT));
+    $lock_mtime = time() - 3600;
+    touch($sut . '/composer.lock', $lock_mtime);
+
+    // Answers: project name, PHP version (empty = default 8.2), deployment
+    // (option 0 = none).
+    $io = $this->fixtures->io(['my-project', '', '0']);
+    $composer = $this->fixtures->createComposer($io, $sut);
+    $this->fixtures->installFixturePackage($composer, $sut, 'test-assets', 'iqual/test-assets');
+    $this->fixtures->runScaffold($composer, $io);
+    $output = $io->getOutput();
+
+    $this->assertStringContainsString("Writing variables to 'extra' section of top-level composer.json file.", $output);
+    $this->assertStringContainsString('Updating the hash in the composer.lock file.', $output);
+    // No nested `composer update --lock` was run.
+    $this->assertStringNotContainsString('Loading composer repositories', $output);
+
+    // The content hash matches the updated composer.json file, everything
+    // else (including the modification time) is kept.
+    $updated_lock = json_decode(file_get_contents($sut . '/composer.lock'), TRUE);
+    $this->assertSame('my-project', $this->readScaffoldExtra($sut)['name']);
+    $this->assertSame(Locker::getContentHash(file_get_contents($sut . '/composer.json')), $updated_lock['content-hash']);
+    $this->assertSame($lock['packages'], $updated_lock['packages']);
+    $this->assertSame($lock['packages-dev'], $updated_lock['packages-dev']);
+    clearstatcache();
+    $this->assertSame($lock_mtime, filemtime($sut . '/composer.lock'));
   }
 
   /**
